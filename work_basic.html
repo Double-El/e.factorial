@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Korean Text to Speech</title>
+</head>
+<body>
+    <h1>Korean Text to Speech</h1>
+    <textarea id="text" rows="10" cols="50" placeholder="여기에 한국어 텍스트를 입력하세요"></textarea><br>
+    <button onclick="startRecording()">Record</button>
+    <button onclick="readText()">Read</button>
+    <button onclick="stopSpeech()">Stop</button>
+    <audio id="audio" controls></audio>
+    <a id="downloadLink" style="display: none;">Download Audio</a>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let speechSynthesisUtterance;
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        const audio = document.getElementById('audio');
+                        audio.src = audioUrl;
+
+                        const downloadLink = document.getElementById('downloadLink');
+                        downloadLink.href = audioUrl;
+                        downloadLink.download = 'recorded_audio.wav';
+                        downloadLink.style.display = 'block';
+
+                        audioChunks = [];
+                    };
+                });
+        }
+
+        function readText() {
+            const text = document.getElementById('text').value;
+            speechSynthesisUtterance = new SpeechSynthesisUtterance(text);
+            speechSynthesisUtterance.lang = 'ko-KR';
+            window.speechSynthesis.speak(speechSynthesisUtterance);
+        }
+
+        function stopSpeech() {
+            window.speechSynthesis.cancel();
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+        }
+    </script>
+</body>
+</html>
