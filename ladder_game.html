@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost Legs Game</title>
+    <style>
+        .line {
+            display: inline-block;
+            width: 60px;
+            border-left: 2px solid black;
+            position: relative;
+        }
+        .horizontal {
+            position: absolute;
+            width: 60px;
+            height: 2px;
+            background: black;
+        }
+        .spaced {
+            margin-left: 200px;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Full viewport height */
+            border: 1px solid #000;
+        }
+        .centered {
+            width: 200px;
+            height: 200px;
+            background-color: lightblue;
+        }
+        .maxLineHeight {
+            max-height: 300px; /* Set your desired max height here */
+            overflow: hidden;
+        }
+        .line-number {
+            position: absolute;
+            top: -20px; /* Adjust as needed */
+            left: -10px; /* Adjust as needed */
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .input-top, .input-bottom {
+            position: absolute;
+            width: 50px;
+            text-align: center;
+        }
+        .input-top {
+            top: -30px; /* Adjust as needed */
+            left: -15px; /* Adjust as needed */
+        }
+        .input-bottom {
+            bottom: -30px; /* Adjust as needed */
+            left: -15px; /* Adjust as needed */
+        }
+    </style>
+</head>
+<body>
+    <div class="spaced">
+        <label for="lines">Lines:</label>
+        <input type="number" id="lines" value="5" min="1">
+        <label for="lineHeight">Line Height:</label>
+        <input type="number" id="lineHeight" value="300" min="1">
+        <label for="horizontals">Horizontal Lines:</label>
+        <input type="number" id="horizontals" value="20" min="1">
+        <button id="generateButton">Generate New Game</button>
+        <br>
+        <br>
+    </div>
+    <div id="game" class="container">
+        <div class="centered"></div>
+    </div>
+
+    <script>
+        document.getElementById('generateButton').addEventListener('click', generateGame);
+
+        function generateGame() {
+            const game = document.getElementById('game');
+            game.innerHTML = '';
+            const lines = parseInt(document.getElementById('lines').value);
+            const lineHeight = parseInt(document.getElementById('lineHeight').value);
+            const horizontals = parseInt(document.getElementById('horizontals').value);
+
+            for (let i = 0; i < lines; i++) {
+                const line = document.createElement('div');
+                line.className = 'line maxLineHeight'; // Apply the maxLineHeight class
+                line.style.height = `${lineHeight}px`; // Set the height dynamically
+
+                const lineNumber = document.createElement('div');
+                lineNumber.className = 'line-number';
+                lineNumber.textContent = i + 1; // Number each line
+                line.appendChild(lineNumber);
+
+                const inputTop = document.createElement('input');
+                inputTop.className = 'input-top';
+                line.appendChild(inputTop);
+
+                const inputBottom = document.createElement('input');
+                inputBottom.className = 'input-bottom';
+                line.appendChild(inputBottom);
+
+                game.appendChild(line);
+            }
+
+            for (let i = 0; i < horizontals; i++) {
+                const randomLine = Math.floor(Math.random() * (lines - 1));
+                const line = game.children[randomLine];
+                const horizontal = document.createElement('div');
+                horizontal.className = 'horizontal';
+                horizontal.style.top = `${Math.floor(Math.random() * lineHeight)}px`; // Randomize the position
+
+                // Ensure horizontal lines don't overlap
+                let overlap = false;
+                for (let j = 0; j < line.children.length; j++) {
+                    if (line.children[j].className === 'horizontal' && Math.abs(parseInt(line.children[j].style.top) - parseInt(horizontal.style.top)) < 10) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                if (!overlap) {
+                    line.appendChild(horizontal);
+                } else {
+                    i--; // Retry this horizontal line
+                }
+            }
+        }
+
+        generateGame();
+    </script>
+</body>
+</html>
