@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Maker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            background-color: #f0f8ff;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+        .options {
+            margin-bottom: 20px;
+            font-size: 24px; /* Increase font size for options */
+        }
+        .optionsList {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .optionsList li {
+            margin: 0 10px;
+            list-style: none;
+            text-align: center;
+        }
+        .optionsList img {
+            width: 100px; /* Increased width */
+            height: 100px; /* Increased height */
+            display: block;
+            margin: 0 auto;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .optionsList img:hover {
+            transform: rotate(360deg) scale(1.2);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        .result {
+            font-size: 32px; /* Increase font size for result */
+            font-weight: bold;
+            margin-top: 20px;
+            animation: fadeIn 2s;
+        }
+        .loading {
+            font-size: 32px; /* Increase font size for loading text */
+            font-weight: bold;
+            margin-top: 20px;
+            animation: blink 1s infinite;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes confetti {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100vh); }
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #ff0;
+            animation: confetti 5s linear infinite;
+        }
+        .button-glow {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            transition: box-shadow 0.3s ease-in-out;
+        }
+        .button-glow:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 0, 1);
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-30px); }
+            60% { transform: translateY(-15px); }
+        }
+        .optionsList img:hover {
+            animation: bounce 2s;
+        }
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background-color: #ff0;
+            border-radius: 50%;
+            animation: firework 1s linear infinite;
+        }
+        @keyframes firework {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>승호를 위한 Decision Maker</h1>
+        <div class="options">
+            <p>오늘하면 인생이 편한 미션</p>
+        </div>
+        <ul class="optionsList" id="optionsList"></ul>
+        <button class="button-glow" onclick="makeDecision()">잠수 미션을 위해 뭐부터 할까?</button>
+        <div class="result" id="result"></div>
+        <div class="loading" id="loading" style="display: none;">Deciding...</div>
+    </div>
+
+    <audio id="backgroundMusic" loop>
+        <source src="background-music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        const options = [
+            { text: "집중듣기", img: "concentrated.jpg" },
+            { text: "영책읽기", img: "read.jpg" },
+            { text: "한글책 읽기", img: "korean.jpg" },
+            { text: "수학", img: "math.jpg" }
+        ]; // Pre-set options with images
+
+        // Display the options
+        const optionsList = document.getElementById('optionsList');
+        options.forEach(option => {
+            const li = document.createElement('li');
+            const img = document.createElement('img');
+            img.src = option.img;
+            img.alt = option.text;
+            li.appendChild(img);
+            li.appendChild(document.createTextNode(option.text));
+            optionsList.appendChild(li);
+        });
+
+        function makeDecision() {
+            const randomIndex = Math.floor(Math.random() * options.length);
+            const result = options[randomIndex].text;
+            
+            document.getElementById('result').innerText = '';
+            document.getElementById('loading').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('result').innerText = `이것부터 해보자!  ${result}`;
+                playConfetti();
+                playFireworks();
+            }, 4000); // 4 seconds delay
+        }
+
+        function playConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 4000);
+            }
+        }
+
+        function playFireworks() {
+            for (let i = 0; i < 100; i++) {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.left = `${Math.random() * 100}vw`;
+                firework.style.top = `${Math.random() * 100}vh`;
+                firework.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                document.body.appendChild(firework);
+                setTimeout(() => firework.remove(), 4000);
+            }
+        }
+
+        // Play background music
+        document.getElementById('backgroundMusic').play();
+    </script>
+</body>
+</html>
