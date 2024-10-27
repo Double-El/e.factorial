@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Roulette</title>
+    <style>
+        #title {
+            text-align: center;
+            font-size: 36px;
+            margin-top: 20px;
+        font-family: 'Times New Roman', Times, serif, cursive;
+            color: rgb(119, 78, 34);
+        }
+        #image-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #image {
+            width: 500px;
+            height: 500px;
+            object-fit: contain;
+        }
+        #controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="title">승호와 아빠가 함께하는 어벤져스 뽑기 게임</div>
+    <div id="image-container">
+        <img id="image" src="avengers.jpg" alt="Initial Image">
+    </div>
+    <div id="controls">
+        <button onclick="startRoulette()">이제 돌려볼까?</button>
+        <button onclick="stopRoulette()">이제 멈춰볼까?</button>
+    </div>
+
+    <script>
+        const images = [
+"thor.jpg", "iron_man.jpg", "black_panther.jpg", "vision.jpg", "hulk.jpg", "hulk_buster.jpg", "ant_man.jpg", "rocket.jpg", "war_machine.jpg", "gamora.jpg", "drax.jpg", "groot.jpg", "winter_soldier.jpg", "thanos.jpg", "thanos_gold.jpg", "falcon.jpg","rocky.jpg", "hawkeye.jpg", "star_lord.jpg"
+        ];
+        let currentIndex = 0;
+        let interval;
+        let timeout;
+
+        function startRoulette() {
+            clearInterval(interval);
+            clearTimeout(timeout);
+            interval = setInterval(() => {
+                currentIndex = (currentIndex + 1) % images.length;
+                document.getElementById('image').src = images[currentIndex];
+            }, 100);
+        }
+
+        function stopRoulette() {
+            clearInterval(interval);
+            let slowdown = 100;
+            function slowDownRoulette() {
+                if (slowdown < 1000) {
+                    timeout = setTimeout(() => {
+                        currentIndex = (currentIndex + 1) % images.length;
+                        document.getElementById('image').src = images[currentIndex];
+                        slowdown += 100;
+                        slowDownRoulette();
+                    }, slowdown);
+                }
+            }
+            slowDownRoulette();
+        }
+    </script>
+</body>
+</html>
