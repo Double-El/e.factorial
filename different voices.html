@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Chatbot</title>
+    <style>
+        #chatbox {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        #chatbox li {
+            padding: 10px;
+            overflow: auto;
+            clear: both;
+        }
+        #userInput {
+            width: 98%;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <ul id="chatbox">
+        <li class="bot">Hello! How can I assist you today?</li>
+    </ul>
+    <input id="userInput" type="text" placeholder="Ask me something...">
+    <script>
+        document.getElementById('userInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                let input = this.value;
+                this.value = '';
+                document.getElementById('chatbox').innerHTML += `<li class="user">${input}</li>`;
+                // TODO: Add your chatbot logic here
+                document.getElementById('chatbox').innerHTML += `<li class="bot">You said: ${input}</li>`;
+            }
+        });
+    </script>
+</body>
+</html>
