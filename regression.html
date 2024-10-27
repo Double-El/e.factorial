@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Linear Regression Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <canvas id="myChart" width="400" height="400" style="margin: 50px;"></canvas>
+    <script>
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var data = [{
+            x: -10,
+            y: 0
+        }, {
+            x: -5,
+            y: 5
+        }, {
+            x: 0,
+            y: 10
+        }, {
+            x: 5,
+            y: 15
+        }, {
+            x: 10,
+            y: 20
+        }, {
+            x: 15,
+            y: 25
+        }, {
+            x: 20,
+            y: 30
+        }];
+
+        // Calculate the slope and intercept of the regression line
+        var n = data.length;
+        var sum_x = 0;
+        var sum_y = 0;
+        var sum_xy = 0;
+        var sum_xx = 0;
+        for (var i = 0; i < n; i++) {
+            sum_x += data[i].x;
+            sum_y += data[i].y;
+            sum_xy += data[i].x * data[i].y;
+            sum_xx += data[i].x * data[i].x;
+        }
+        var slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
+        var intercept = (sum_y - slope * sum_x) / n;
+
+        // Create the scatter plot and regression line
+        var scatterChart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Scatter Dataset',
+                    data: data,
+                    showLine: true,
+                    fill: false,
+                    lineTension: 0,
+                    borderColor: 'red',
+                    backgroundColor: 'transparent',
+                    pointRadius: 5,
+                    pointHoverRadius: 5,
+                    pointHitRadius: 20,
+                    pointBorderWidth: 2,
+                    pointStyle: 'rectRounded'
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
