@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>loan check list  </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .header {
+            background-color: #333;
+            color: #fff;
+            padding: 0px;
+            text-align: center;
+        }
+
+        .inline-display {
+            display: inline-block;
+            margin-right: 5px;
+
+        }
+        .container {
+          display: flex;
+          align-items: center;
+          }
+
+        .container h2 {
+  margin-right: 20px;
+}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>호평지점 여신체크리스트</h1>
+    </div>
+
+    <div id="content">
+      <fieldset>
+      <ul id="customer" style="margin: 0">
+        <script>
+          var labels = ["차주: ", "고객번호: ", "사업장소재지:", "차주연락처:", "연령:", "심사기한:", "실행일자:", "개업일:", "세무대리인:"];
+          var ids = ["user-name", "customer-name", "addr", "contact", "age", "deadline", "d-day", "open-date", "tax_preparer"];
+          var types = ["text", "text", "text", "tel", "text", "date", "date", "date", "tel"];
+          var widths = ["100px", "80px", "100px", "88px", "20px"];
+          
+          labels.forEach(function(label, index) {
+            document.write('<li class="inline-display"><label for="' + ids[index] + '">' + label + '</label><input type="' + 
+              types[index] + '" id="' + ids[index] + '" style="width: ' + widths[index] + '"></li>');
+          });
+        </script>
+      </ul>
+      </fieldset>
+    </div>
+    
+    <hr>
+    
+    <script>
+      var labels = ['초신규', 'TCB', '관계형', '공동사업자'];
+      labels.forEach(function(label) {
+        document.write('<li class="inline-display"><input type="checkbox"><label>' + label + '</label></li>');
+      });
+    </script>
+
+    <hr>
+
+    <li class="inline-display">
+      <input type="checkbox">
+      <label>CCRM</label>
+    </li>
+    <li class="inline-display">
+      <input type="checkbox">
+      <label>SOHO CSS</label>
+    </li>
+
+    <hr>
+
+    <form action="">  
+      <label for="industry">업종:</label>
+      <select id="industry" onchange="showExplanation(this)">
+        <script>
+          var options = ["", "임대업", "건설업", "제조업", "병의원업", "요양병원", "숙박업", 
+          "도소매업", "약국", "주유소", "마트", "교회", "음식업", "기타"];
+          options.forEach(function(option) {
+            document.write('<option value="' + option + '">' + option + '</option>');
+          });
+        </script>
+      </select>     
+    </form>
+  
+
+    <p id="explanation"></p>
+
+    <li class="inline-display">
+      <label for="use">자금용도: </label>
+      <input type="text" id="use" style="width: 900px">
+    </li>
+
+    <hr>
+
+    <input type="checkbox" id="restriction">
+    <label>전행여신 취급제한</label>
+    <p id="text1" style="display:none">2년연속 EBIDTA이자보상배율1미만 or 2년연속 당기순손실 or (2년연속 10%이상 매출감소 & 2년연속 차입금 증가) or<br>
+    3년연속 이자지급후 현금흐름 부 or 매출액초과 차입금 보유.<br>
+    단 BBB+ 이상 차주의 3억이하 or BBB이상 차주의 전액담보여신은 전행여신 취급가능 </p>
+  
+    <input type="checkbox" id="refinance-restriction">
+    <label>타금융대환 취급제한</label>
+    <p id="text2" style="display:none">[CCRM] (BBB- & AIRS+ BB 이하) or BB+ 이하면 최저 심사역 // [SOHO CSS] BBB- 이하 본부심사</p>
+  
+    <input type="checkbox" id="misuse">
+    <label>용도외유용 점검대상</label>
+    <p id="text3" style="display:none">[법인] 건당 5억원 초과 or 동일인당 비외감 10억원 초과 // [개인사업자] 건당 1억원 초과 or 동일인당 5억원 초과<br>
+  // 타행대환은 용도외유용 점검 생략 </p>
+  
+  <input type="checkbox" id="site-visit">
+  <label>현장방문 점검대상</label>
+  <p id="text4" style="display:none">[비외감] 건당 10억원 이상 // [개인사업자] 건당 5억원 이상 // 사업자등록 후 3개월 이내 취급 </p>
+  
+  <hr>
+
+  <h4>운전대</h4>
+
+  <input type="checkbox" id="calculated_amount" onchange="toggleInputs()">
+  <label>운전대 소요자금 산출</label><br>
+
+  <div id="inputs" style="display: none;">
+
+  <script>
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+  
+    var labels = ["연간추정매출액:", "감가상각비:", "기운전자금:", "매출채권:", "재고자산:", "선급금:", "매입채무:", "선수금:", "연간매출액:"];
+    var ids = ["expected_sales1", "depreciation1", "existing_working_loan1","receivable", "asset", "prepaid", "payable", "advance", "sales"];
+    var widths = ["85px", "85px", "85px", "85px", "85px", "85px","85px", "85px", "85px"];
+    
+    
+    labels.forEach(function(label, index) {
+      document.write('<label for="' + ids[index] + '">' + label + '</label><input id="' + ids[index] + 
+      '" type="text" onkeyup="calculate2()" style="width: ' + widths[index] + '">');
+    });
+    
+    document.write('<p id="sum2"></p>');
+    </script>
+  </div>
+
+    <script> 
+    function calculate2() {
+      var expected_sales1 = Number(document.getElementById("expected_sales1").value);
+      var depreciation1 = Number(document.getElementById("depreciation1").value);
+      var existing_working_loan1 = Number(document.getElementById("existing_working_loan1").value);
+      var receivable = Number(document.getElementById("receivable").value);
+      var asset = Number(document.getElementById("asset").value);
+      var prepaid = Number(document.getElementById("prepaid").value);
+      var payable = Number(document.getElementById("payable").value);
+      var advance = Number(document.getElementById("advance").value);
+      var sales = Number(document.getElementById("sales").value);
+  
+      if (!isNaN(expected_sales1) && !isNaN(depreciation1) && !isNaN(existing_working_loan1) && !isNaN(receivable) && 
+      !isNaN(asset) && !isNaN(prepaid) && !isNaN(payable) && !isNaN(advance) && !isNaN(sales)) {
+        var sum2 = (expected_sales1-depreciation1)*(((receivable+asset+prepaid)-(payable+sales))/sales) - existing_working_loan1 ;
+        sum2 = Math.floor(sum2/1000000) * 1000000
+        document.getElementById("sum2").innerHTML = "대출취급가능액: " + formatNumber(sum2) + "원";
+      }
+    }
+
+    function toggleInputs() {
+        var checkbox = document.getElementById("calculated_amount");
+        var inputs = document.getElementById("inputs");
+
+        if (checkbox.checked) {
+            inputs.style.display = "block";
+        } else {
+            inputs.style.display = "none";
+        }
+    }
+
+  </script>
+
+  <input type="checkbox" id="calculated_amount2" onchange="toggleInputs2()">
+  <label> 중소기업 운전대 소요자금 산출</label><br>
+
+  <div id="inputs2" style="display: none;">
+
+        <script>
+            function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+        
+            var labels = ["연간추정매출액:", "감가상각비:", "기운전자금:"];
+            var ids = ["expected_sales2", "depreciation2", "existing_working_loan2"];
+            var widths = ["85px", "85px", "85px"];
+            
+            
+            labels.forEach(function(label, index) {
+            document.write('<label for="' + ids[index] + '">' + label + '</label><input id="' + ids[index] + 
+            '" type="text" onkeyup="calculate3()" style="width: ' + widths[index] + '">');
+            });
+            
+            document.write('<p id="sum3"></p>');
+        </script>
+  </div>
+
+    <script>
+        function calculate3() {
+        var expected_sales2 = Number(document.getElementById("expected_sales2").value);
+        var depreciation2 = Number(document.getElementById("depreciation2").value);
+        var existing_working_loan2 = Number(document.getElementById("existing_working_loan2").value);
+    
+        if (!isNaN(expected_sales2) && !isNaN(depreciation2) && !isNaN(existing_working_loan2)) {
+            var sum3 = (expected_sales2-depreciation2)/2 - existing_working_loan2 ;
+            sum3 = Math.floor(sum3/1000000) * 1000000
+            document.getElementById("sum3").innerHTML = "대출취급가능액: " + formatNumber(sum3) + "원";
+        }
+        }
+        
+        function toggleInputs2() {
+    var checkbox = document.getElementById("calculated_amount2");
+    var inputs2 = document.getElementById("inputs2");
+
+    if (checkbox.checked) {
+        inputs2.style.display = "block";
+    } else {
+        inputs2.style.display = "none";
+    }
+}
+    </script>
+
+
+    <input type="checkbox" id="calculated_amount3" onchange="toggleInputs3()">
+    <label> [법인] 설립 후 3년 이내 [개인사업자] 설립연도 내 운전대 소요자금 산출</label><br> 
+
+    <div id="inputs3" style="display: none;">
+        <script>
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        var labels = ["연간추정매출액:", "감가상각비:", "기운전자금:"];
+        var ids = ["expected_sales3", "depreciation3", "existing_working_loan3"];
+        var widths = ["85px", "85px", "85px"];
+        
+        
+        labels.forEach(function(label, index) {
+            document.write('<label for="' + ids[index] + '">' + label + '</label><input id="' + ids[index] + 
+            '" type="text" onkeyup="calculate4()" style="width: ' + widths[index] + '">');
+        });
+        
+        document.write('<p id="sum4"></p>');
+        </script>
+    </div>
+
+    <script>
+    function calculate4() {
+        var expected_sales3 = Number(document.getElementById("expected_sales3").value);
+        var depreciation3 = Number(document.getElementById("depreciation3").value);
+        var existing_working_loan3 = Number(document.getElementById("existing_working_loan3").value);
+
+        if (!isNaN(expected_sales3) && !isNaN(depreciation3) && !isNaN(existing_working_loan3)) {
+            var sum4 = (expected_sales3-depreciation3)/3 - existing_working_loan3 ;
+            sum4 = Math.floor(sum4/1000000) * 1000000;
+            document.getElementById("sum4").innerHTML = "대출취급가능액: " + formatNumber(sum4) + "원";
+        }
+    }
+
+    function toggleInputs3() {
+        var checkbox = document.getElementById("calculated_amount3");
+        var inputs3 = document.getElementById("inputs3");
+
+        if (checkbox.checked) {
+            inputs3.style.display = "block";
+        } else {
+            inputs3.style.display = "none";
+        }
+    }
+    </script>
+
+
+  <input type="checkbox" id="insufficient">
+  <label>산출표상 취급가능액 부족시 자금수급계획표 작성</label>
+  <p id="text5" style="display:none">자금수급계획표에 의해서도 한도초과시 최저심사역<br>
+  BBB-&((연간매출액 범위내 & 신청여신 포함 당행운전자금 30억원 이하) or 비경상적 운전자금 or 계절성 운전자금) </p>
+
+  <hr>
+
+<h4>시설대</h4>
+
+<input type="checkbox" id="propriety">
+<label>시설대 적정성 검토</label>
+<p id="text6" style="display:none">타당성, 상환능력, 환가성 검토, 업계비유동장기적합률 비교(전산자동산출)<br>
+신청일기준 3개월 이내 전행으로 신규취급한 운전대 용도외유용 점검<br>
+건축계획확인자료 징구(건축허가서, 설계계약서) // 시설대투자 후 매출변동 체크 </p>
+
+<input type="checkbox" id="repayment">
+<label>타행시설대 대환시 내입조건</label>
+<p id="text7" style="display:none">A & AIRS+ A+ 무내입<br>
+  BBB+ or (BBB & 차주기준 담보비율 80%) 경우 최초취급일기준 3년 초과시 10% 내입원칙<br>
+  BBB 이하는 최초취급일기준 2년 초과시 10% 내입원칙<br>
+  단 (BBB+ & 차주기준 담보비율 70%) or (B+ & 차주기준 전액담보) 경우 최초취급일기준 5년 초과시 10% 내입가능<br>
+  10% 상환이력 있으면 10%마다 +1년 </p>
+
+<input type="checkbox" id="loan-limit">
+<label>대출한도</label>
+<p id="text8" style="display:none">min(소요자금 80%, 미지급자금(6개월 이내 지급자금 포함), 감정평가액) - 타행 대출한도 차감<br>
+A or (BBB+ & T4-) 소요자금 90% 가능하나 사회초년기업 및 AIRS+BB 이하 제외<br></p>
+
+<input type="checkbox" id="facility_loan" onchange="facilityInputs()">
+  <label> 총소요자금 및 대출비율</label>
+
+  <div id="facility_inputs" style="display: none;">
+
+  <script>
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+  
+    var labels = ["자기자금액:", "본건관련 타기관 차입금액:", "본건관련 당행 차입금액:", "대출금액:"];
+    var ids = ["capital", "other_bank_loan", "our_bank_loan", "request"];
+    var widths = ["85px", "85px", "85px", "85px"];
+    
+    
+    labels.forEach(function(label, index) {
+      document.write('<label for="' + ids[index] + '">' + label + '</label><input id="' + ids[index] + 
+      '" type="text" onkeyup="calculate5()" style="width: ' + widths[index] + '">');
+    });
+    
+    document.write('<p id="total_fund"></p>');
+    document.write('<p id="loan_ratio"></p>');
+    </script>
+  </div>
+
+    <script> 
+    function calculate5() {
+      var capital = Number(document.getElementById("capital").value);
+      var other_bank_loan = Number(document.getElementById("other_bank_loan").value);
+      var our_bank_loan = Number(document.getElementById("our_bank_loan").value);
+      var request = Number(document.getElementById("request").value);
+  
+      if (!isNaN(capital) && !isNaN(other_bank_loan) && !isNaN(our_bank_loan) && !isNaN(request)) {
+        var total_fund = capital + other_bank_loan + our_bank_loan + request ;
+        var loan_ratio =  ((our_bank_loan+request)/(capital + other_bank_loan + our_bank_loan + request) *100).toFixed(2);
+        document.getElementById("total_fund").innerHTML = "총소요자금: " + formatNumber(total_fund) + "원" + "   대출비율: " + formatNumber(loan_ratio) + "%";
+      }
+    }
+
+    function facilityInputs() {
+        var checkbox = document.getElementById("facility_loan");
+        var facility_inputs = document.getElementById("facility_inputs");
+
+        if (checkbox.checked) {
+            facility_inputs.style.display = "block";
+        } else {
+            facility_inputs.style.display = "none";
+        }
+    }
+
+  </script>
+
+<input type="checkbox" id="rti" onchange="rtiInputs()">
+  <label> RTI</label><br>
+
+  <div id="rti_inputs" style="display: none;">
+
+  <script>
+  
+    var labels = ["보증금:", "월임대료:", "신청금액:"];
+    var ids = ["deposit", "monthly_lease", "rti_amount"];
+    var widths = ["85px", "85px", "85px"];
+    
+    
+    labels.forEach(function(label, index) {
+      document.write('<label for="' + ids[index] + '">' + label + '</label><input id="' + ids[index] + 
+      '" type="text" onkeyup="calculate6()" style="width: ' + widths[index] + '">');
+    });
+    
+    document.write('<p id="rti_interest"></p>');
+    document.write('<p id="rti_fixed_interest"></p>');
+  </script>
+  </div>
+
+    <script> 
+    function calculate6() {
+      var deposit = Number(document.getElementById("deposit").value);
+      var monthly_lease = Number(document.getElementById("monthly_lease").value);
+      var rti_amount = Number(document.getElementById("rti_amount").value);
+  
+      if (!isNaN(deposit) && !isNaN(monthly_lease) && !isNaN(rti_amount)) {
+        var rti_interest =  ((deposit*0.0311 + monthly_lease*12)/(rti_amount*1.5)) - 0.01;
+        document.getElementById("rti_interest").innerHTML = "RTI충족 최대변동이율: " + (rti_interest * 100).toFixed(2) + "%";
+        document.getElementById("rti_fixed_interest").innerHTML = "RTI충족 최대고정이율: " + ((rti_interest+0.01) * 100).toFixed(2) + "%";
+
+      }
+    }
+
+    function rtiInputs() {
+        var checkbox = document.getElementById("rti");
+        var rti_inputs = document.getElementById("rti_inputs");
+
+        if (checkbox.checked) {
+            rti_inputs.style.display = "block";
+        } else {
+            rti_inputs.style.display = "none";
+        }
+    }
+
+  </script>
+
+
+
+<input type="checkbox" id="term">
+<label>대출기한</label>
+<p id="text9" style="display:none">BBB+ or (BBB & 해당여신 담보비율 80%) 경우 15년이며 그 외에는 10년 <br> </p>
+
+<input type="checkbox" id="uneven">
+<label>원금불균등분할상환 제한</label>
+<p id="text10" style="display:none">A- & 차주기준담보비율 60% 경우 최초약정액의 50%까지 최종회차 상환가능<br>
+BBB- & 차주기준담보비율 70% 경우 최초약정액의 40%까지 최종회차 상환가능<br> </p>
+
+<input type="checkbox" id="others">
+<label>사후 점검</label>
+<p id="text11" style="display:none">후취담보 취득서류 징구<br> 
+시설대취급 이후 2년 이내 추가여신 신규시 사업계획이행 점검하여 매출변동 및 신용등급변동을 의견서에 기술</p>
+
+<hr>
+<script>
+  function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  var labels = ["탁감가(원):", "담보인정비율(%):", "소액보증금(원):", "선순위(원):"];
+  var ids = ["num1", "num2", "num3", "num4"];
+  var widths = ["100px", "30px", "100px", "100px"];
+  
+  document.write('<h4>담보제공</h4>');
+  
+  labels.forEach(function(label, index) {
+    document.write('<label for="' + ids[index] + '">' + label + '</label><input id="' + ids[index] + 
+    '" type="text" onkeyup="calculate()" style="width: ' + widths[index] + '">');
+  });
+  
+  document.write('<p id="sum"></p>');
+
+  function calculate() {
+    var num1 = Number(document.getElementById("num1").value);
+    var num2 = Number(document.getElementById("num2").value);
+    var num3 = Number(document.getElementById("num3").value);
+    var num4 = Number(document.getElementById("num4").value);
+
+    if (!isNaN(num1) && !isNaN(num2) && !isNaN(num3) && !isNaN(num4)) {
+      var sum = num1 * num2 / 100 - num3 - num4;
+      document.getElementById("sum").innerHTML = "유효담보가: " + formatNumber(sum) + "원";
+    }
+  }
+
+
+  var labels = ['담보제공자', '화재보험', '소유권이전', '위반건축물', '튼상가', '집합건물 지하', '지상권',];
+  labels.forEach(function(label) {
+    document.write('<li class="inline-display"><input type="checkbox"><label>' + label + '</label></li>');
+  });
+</script>
+    
+<hr>
+
+<h4><input type="checkbox" id="loan1" onchange="loanInputs1()">대출1상세</h4>
+<div id="loaninputs1" style="display: none;">
+
+<label for="loan-kind">대출종류:</label>
+<select>
+  <option value="loan-kind"></option>
+  <option value="facility">시설대</option>
+  <option value="working-fund">운전대</option>
+  <option value="over-draft">종통대</option>
+</select> 
+
+<label for="subject">대출과목:</label>
+<form action="" class="inline-display">  
+  <select>
+    <option value="subject" selected></option>
+    <option value="general">일반자금대출</option>
+    <option value="policy">정책자금</option>
+    <option value="c2">C2</option>
+    <option value="job">일자리</option>
+    <option value="woman">여성기업</option>
+  </select>     
+</form>
+
+<li class="inline-display">
+  <label for="requested-amount">신청금액:</label>
+  <input type="text" id="requested-amount" style="width: 80px">
+</li>
+<label for="request">금리물:</label>
+<select>
+  <option value="base-rate"></option>
+  <option value="cd">CD3개월</option>
+  <option value="6m">금융채6개월</option>
+  <option value="1y">금융채1년</option>
+  <option value="3y">금융채3년</option>
+  <option value="fixed">고정금리</option>
+  <option value="inner">내부금리</option>
+</select>  
+<li class="inline-display">
+  <label for="margin">마진율(bp):</label>
+  <input type="text" id="margin" style="width: 30px">
+</li> 
+
+<hr>
+
+<li class="inline-display">
+  <label for="payment-due">타행상환예정금액:</label>
+  <input type="text" id="payment-due" style="width: 80px">
+</li> 
+<li class="inline-display">
+  <label for="applied-rate">타행적용금리(%):</label>
+  <input type="text" id="applied-rate" style="width: 30px">
+</li> 
+<li class="inline-display">
+  <input type="checkbox">
+  <label>금리운용 자율한도</label>
+</li>
+<label for="repayment">상환방식:</label>
+<select>
+  <option value="repayment"></option>
+  <option value="expiration">만기일시</option>
+  <option value="equal">균등분할상환</option>
+  <option value="unequal">불균등분할상환</option>
+</select> 
+</div>
+
+<script>
+    function loanInputs1() {
+        var checkbox = document.getElementById("loan1");
+        var loaninputs1 = document.getElementById("loaninputs1");
+    
+        if (checkbox.checked) {
+            loaninputs1.style.display = "block";
+        } else {
+            loaninputs1.style.display = "none";
+        }
+    }
+    </script>
+
+<h4><input type="checkbox" id="loan2" onchange="loanInputs2()">대출2상세</h4>
+<div id="loaninputs2" style="display: none;">
+
+<label for="loan-kind">대출종류:</label>
+<select>
+  <option value="loan-kind"></option>
+  <option value="facility">시설대</option>
+  <option value="working-fund">운전대</option>
+  <option value="over-draft">종통대</option>
+</select> 
+
+<label for="subject">대출과목:</label>
+<form action="" class="inline-display">  
+  <select>
+    <option value="subject" selected></option>
+    <option value="general">일반자금대출</option>
+    <option value="policy">정책자금</option>
+    <option value="c2">C2</option>
+    <option value="job">일자리</option>
+    <option value="woman">여성기업</option>
+  </select>     
+</form>
+
+<li class="inline-display">
+  <label for="requested-amount">신청금액:</label>
+  <input type="text" id="requested-amount" style="width: 80px">
+</li>
+<label for="request">금리물:</label>
+<select>
+  <option value="base-rate"></option>
+  <option value="cd">CD3개월</option>
+  <option value="6m">금융채6개월</option>
+  <option value="1y">금융채1년</option>
+  <option value="3y">금융채3년</option>
+  <option value="fixed">고정금리</option>
+  <option value="inner">내부금리</option>
+</select>  
+<li class="inline-display">
+  <label for="margin">마진율(bp):</label>
+  <input type="text" id="margin" style="width: 30px">
+</li> 
+
+<hr>
+
+<li class="inline-display">
+  <label for="payment-due">타행상환예정금액:</label>
+  <input type="text" id="payment-due" style="width: 80px">
+</li> 
+<li class="inline-display">
+  <label for="applied-rate">타행적용금리(%):</label>
+  <input type="text" id="applied-rate" style="width: 30px">
+</li> 
+<li class="inline-display">
+  <input type="checkbox">
+  <label>금리운용 자율한도</label>
+</li>
+<label for="repayment">상환방식:</label>
+<select>
+  <option value="repayment"></option>
+  <option value="expiration">만기일시</option>
+  <option value="equal">균등분할상환</option>
+  <option value="unequal">불균등분할상환</option>
+</select> 
+</div>
+
+<script>
+    function loanInputs2() {
+        var checkbox = document.getElementById("loan2");
+        var loaninputs2 = document.getElementById("loaninputs2");
+    
+        if (checkbox.checked) {
+            loaninputs2.style.display = "block";
+        } else {
+            loaninputs2.style.display = "none";
+        }
+    }
+    </script>
+
+<h4><input type="checkbox" id="loan3" onchange="loanInputs3()">대출3상세</h4>
+<div id="loaninputs3" style="display: none;">
+
+<label for="loan-kind">대출종류:</label>
+<select>
+  <option value="loan-kind"></option>
+  <option value="facility">시설대</option>
+  <option value="working-fund">운전대</option>
+  <option value="over-draft">종통대</option>
+</select> 
+
+<label for="subject">대출과목:</label>
+<form action="" class="inline-display">  
+  <select>
+    <option value="subject" selected></option>
+    <option value="general">일반자금대출</option>
+    <option value="policy">정책자금</option>
+    <option value="c2">C2</option>
+    <option value="job">일자리</option>
+    <option value="woman">여성기업</option>
+  </select>     
+</form>
+
+<li class="inline-display">
+  <label for="requested-amount">신청금액:</label>
+  <input type="text" id="requested-amount" style="width: 80px">
+</li>
+<label for="request">금리물:</label>
+<select>
+  <option value="base-rate"></option>
+  <option value="cd">CD3개월</option>
+  <option value="6m">금융채6개월</option>
+  <option value="1y">금융채1년</option>
+  <option value="3y">금융채3년</option>
+  <option value="fixed">고정금리</option>
+  <option value="inner">내부금리</option>
+</select>  
+<li class="inline-display">
+  <label for="margin">마진율(bp):</label>
+  <input type="text" id="margin" style="width: 30px">
+</li> 
+
+<hr>
+
+<li class="inline-display">
+  <label for="payment-due">타행상환예정금액:</label>
+  <input type="text" id="payment-due" style="width: 80px">
+</li> 
+<li class="inline-display">
+  <label for="applied-rate">타행적용금리(%):</label>
+  <input type="text" id="applied-rate" style="width: 30px">
+</li> 
+<li class="inline-display">
+  <input type="checkbox">
+  <label>금리운용 자율한도</label>
+</li>
+<label for="repayment">상환방식:</label>
+<select>
+  <option value="repayment"></option>
+  <option value="expiration">만기일시</option>
+  <option value="equal">균등분할상환</option>
+  <option value="unequal">불균등분할상환</option>
+</select> 
+</div>
+
+<script>
+    function loanInputs3() {
+        var checkbox = document.getElementById("loan3");
+        var loaninputs3 = document.getElementById("loaninputs3");
+    
+        if (checkbox.checked) {
+            loaninputs3.style.display = "block";
+        } else {
+            loaninputs3.style.display = "none";
+        }
+    }
+    </script>
+    
+    
+<hr>
+<div class="container">
+  <h4>부수거래</h4>
+  <script>
+    var labels = ['노란우산', 'IRP', '청약', '가맹점', '개인카드', '법인카드'];
+    labels.forEach(function(label) {
+      document.write('<li class="inline-display"><input type="checkbox"><label>' + label + '</label></li>');
+    });
+  </script>
+</div>
+        
+<hr>
+
+<div class="container">
+  <h4>비용안내</h4>
+  <script>
+    var labels = ["인지세", "채권할인료", "한도약정수수료", "말소비", "중도상환수수료"];
+    var listItems = "";
+
+    for (var i = 0; i < labels.length; i++) {
+      listItems += '<li class="inline-display"><input type="checkbox"><label>' + labels[i] + '</label></li>';
+    }
+
+    document.write(listItems);
+  </script>
+</div>
+
+<hr>
+
+<h4>메모</h4>
+<li>
+<textarea id="memo" cols="125" rows="10"></textarea>
+</li>   
+
+<button onclick="printPage()">Print this page</button>
+
+    
+
+<script>
+
+var checkBoxes = ['restriction', 'refinance-restriction', 'misuse', 'site-visit', 'insufficient', 'propriety', 'repayment', 'loan-limit', 'term', 'uneven', 'others'];
+checkBoxes.forEach(function(id, index) {
+    document.getElementById(id).addEventListener('change', function() {
+        document.getElementById('text' + (index + 1)).style.display = this.checked ? 'block' : 'none';
+    });
+});
+
+
+  function showExplanation(selectObj) {
+  var explanation = document.getElementById("explanation");
+
+  if (selectObj.value == "others") {
+    explanation.innerHTML = "";
+  } 
+  else if (selectObj.value == "임대업") {
+    var lines = [
+    " 자금목적 불명확 건 (사업 및 건축계획 불명확) 지양 (ex. 예비자금 종통대, 투기성 토지구입)",
+    " 다수의 매수인(공동 사업자)을 통한 매수 건은 이해 관계인간 분쟁가능성 감안 제한적 심사",
+    " 담보 감정평가 금액의 적정성 여부 확인 (ex. 매매가<감정가 , 낙찰가<감정가)",
+    " 자기자금 (원천파악 포함) 수준 확인 / 차입비율 과다여부",
+    " 건물 신축 자금 지원 시 건축단가 적정성 점검, 준공 후 임대료수취전까지 금융비용부담 재원, 재무융통성, 채권보전책",
+    " 임대차현황파악, RTI 비율 확인(공실률, 미사용 장기 공실 상태 여부, 특수관계인과의 임대차여부, 임대료 수준의 적정성 등)",
+    " RTI/임대차계약서/스트레스적용/임대업공급가액명세서/공실여부/유효담보가 초과 신용부분 10% 매년상환"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "건설업") {
+    var lines = [
+    " 건설경기 불확실성(정부 고강도 규제 등) 확대 및 변동성 감안 입지,사업성 분석 등 세밀한 검토",
+    " 업종 특성상 회계의 투명성에 대한 신뢰도 낮아 매출액 및 매출채권 심층분석 통한 심사",
+    " 여신은 분할상환구조 심사를 기본 원칙으로 함(여신의 고정화 방지)",
+    " 종통대 지원은 원칙적지양 & 미사용 신용취급 한도대 만기도래 시 감축유도",
+    " 매출채권(공사미수금), 미청구공사 잔액의 적정성 심사"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "제조업") {
+    var lines = [
+    " 차주 업력 및 경영진 현황, 기술력 보유 여부 등",
+    " 판매 / 구매 상대방 거래처 다수여부, 조건 확인",
+    " 자가사업장 매입, 신축 포함 시설투자 과다여부 (3개년 이상 재무제표 주요 지표확인)",
+    " 특수관계인과의 내부 매출 비중 (매출 실적 왜곡) 점검"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "병의원업") {
+    var lines = [
+    " 건보료 및 카드 매출 당행 지정 관리 영업현금흐름 수시파악",
+    " 타인자본 (당, 타행 가계, 기업 여신) 통한 시설투자 여부",
+    " 단순 판관비(급여, 임차료, 소모품비 구입) 충당 목적 운전대 지원 지양",
+    " 대표자 평판 및 업력 점검 / 사무장, 네트워크 병원 여부"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "요양병원") {
+    var lines = [
+      " 입지여건 및 영업현황 점검 및 특화진료 과목(암, 재활요양 전문) 여부",
+      " 실질매출(병상 가동율 외) 및 추가 수입, 상환능력 위주 검토 필요",
+      " 시설자금심사 시 일반 업종 대비 자기자금 투입 비율 상향 심사",
+      " 대표자 재무융통성 점검 /과다 경쟁 수익성 악화 판관비용 충당 필요"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "숙박업") {
+    var lines = [
+    " 비신고 현금매출 과다 인정 요청 (최근 10 ~ 20 %수준) / 실장부로 매출실적 점검",
+    " 2금융권 시설대 90% 초과지원 업체 단기내 대환신청 ( 차입금 체증) 지양",
+    " 단기내 소유권 이전 다건 여부 확인",
+    " 신청 담보내 유흥시설 존재 시 지원 불가"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "도소매업") {
+    var lines = [
+    " 매출액 추이 및 내용 등에 대한 구체적인 용도 입증자료 확인 / 품목 및 수익구조 점검",
+    " 대표자 재무융통성 (상품 가격 상승 대비 비경상 운전자금소요 감안)",
+    " 매출채권 과다발생 시 현금흐름 악화 → 장기 미회수 매출채권 보유 비중 점검",
+    " 전자상거래업 겸업 (채널 다각화 및 트렌드 부합)"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "약국") {
+    var lines = [
+    " 업체간 과다 경쟁심화, 제약사와 거래처의 마진축소 인한 현금흐름 악화",
+    " 인근 병의원업과 연계 여부 (제조약, 일반약 판매 수입 세부 점검)",
+    " 적정소요자금한도확인(구매자금, 원화지급보증 등 포함)(매출추이 및 운전자금회전기간 등 감안하여 적정소요자금 내 여신운용)",
+    " 특수 관계인과의 거래내용확인 - 관계사 간 내부거래 규모파악,차입금 적정성 및 수익성검토"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "주유소") {
+    var lines = [
+    " 전기차 및 하이브리드 차량 등 친환경 정책에 따른 산업경쟁력 악화",
+    " 고정화 운전대 과다 보유여부, 정유사 초기 지원금 포함 부채비율 점검",
+    " 고정거래처 확보 여부 및 거래 조건 점검",
+    " 입지 분석 및 주변 경쟁 여건(셀프, 알뜰 주유소 등) 점검",
+    " 전기차 충전소 등 업종 전환 시 사업성 및 시설대 적정성 검토"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "마트") {
+    var lines = [
+    " 운전자금 및 만기 일시 상환대출 지원 지양(현금 매출업종으로 운전자금 불필요)",
+    " 자가사업장 미 보유업체(임대사업장)에 대한 대출 지원 지양(임대사업장 업체의 경우 사업 지속성 미흡으로 여신지원 지양)",
+    " 사업장 신축 시 상권분석(고객 소득수준, 소비성향, 접근성 등) 및 과도한 시설투자 여부",
+    " 특화 상품 매출(신선식품, 청과, 공산품 비중), 사업장 내 임대현황(정육코너, 위탁판매 등) 점검"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "교회") {
+    var lines = [
+    " 공시)신한 플러스 교회대출 업무기준 외 취급 불가",
+    " 경상 헌금 추이 및 금융비용부담율로 한도 적정성 검토",
+    " 종교활동에 필수적인 시설구입, 신축 외 부동산(목회자 사택 등)구입 지원 불가",
+    " 신도간 분쟁, 목회자와 신도간 분쟁, 담임 목사 인지도 등 평판 리스크 점검",
+    "코로나 19 직접 피해 업종으로 당행기여도 및 업무기준에 따라 제한적 심사 진행"
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else if (selectObj.value == "음식업") {
+    var lines = [
+    " 사업부협의시 비용차감 후 마진 30bp 확보 ",
+    ]
+    explanation.innerHTML = lines.join("<br>");
+  }
+  else {
+    explanation.innerHTML = "";
+  }
+  }
+
+
+  function printPage() {
+  window.print();
+}
+    </script>
+</body>
+</html>
+
+
