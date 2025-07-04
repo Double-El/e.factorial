@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sliding Puzzle Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 15px;
+            margin: 2rem auto;
+            width: 320px;
+            height: 320px;
+        }
+        
+        .tile {
+            background: linear-gradient(145deg, #f0f0f0, #d0d0d0);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tile.empty {
+            background: transparent;
+            box-shadow: none;
+            cursor: default;
+        }
+        
+        .tile.empty:hover {
+            transform: none;
+        }
+        
+        .controls {
+            margin-top: 2rem;
+        }
+        
+        button {
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .moves {
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .win-message {
+            font-size: 1.5rem;
+            color: #4CAF50;
+            margin: 1rem 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+        
+        .instructions {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧩 Sliding Puzzle</h1>
+        <div class="moves">Moves: <span id="moveCount">0</span></div>
+        <div class="win-message" id="winMessage">🎉 Congratulations! You solved the puzzle! 🎉</div>
+        <div class="game-board" id="gameBoard"></div>
+        <div class="controls">
+            <button onclick="shufflePuzzle()">New Game</button>
+            <button onclick="resetPuzzle()">Reset</button>
+        </div>
+        <div class="instructions">
+            <p>Click on tiles adjacent to the empty space to move them. Arrange the numbers 1-15 in order!</p>
+        </div>
+    </div>
+
+    <script>
+        let board = [];
+        let emptyPos = { row: 3, col: 3 };
+        let moveCount = 0;
+        let isWon = false;
+
+        // Initialize the puzzle
+        function initializePuzzle() {
+            board = [];
+            for (let i = 0; i < 4; i++) {
+                board[i] = [];
+                for (let j = 0; j < 4; j++) {
+                    if (i === 3 && j === 3) {
+                        board[i][j] = 0; // Empty space
+                    } else {
+                        board[i][j] = i * 4 + j + 1;
+                    }
+                }
+            }
+            emptyPos = { row: 3, col: 3 };
+            moveCount = 0;
+            isWon = false;
+            updateDisplay();
+        }
+
+        // Create the visual board
+        function createBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+                    tile.dataset.row = i;
+                    tile.dataset.col = j;
+                    tile.onclick = () => moveTile(i, j);
+                    gameBoard.appendChild(tile);
+                }
+            }
+        }
+
+        // Update the display
+        function updateDisplay() {
+            const tiles = document.querySelectorAll('.tile');
+            tiles.forEach(tile => {
+                const row = parseInt(tile.dataset.row);
+                const col = parseInt(tile.dataset.col);
+                const value = board[row][col];
+                
+                if (value === 0) {
+                    tile.textContent = '';
+                    tile.className = 'tile empty';
+                } else {
+                    tile.textContent = value;
+                    tile.className = 'tile';
+                }
+            });
+            
+            document.getElementById('moveCount').textContent = moveCount;
+            
+            if (isWon) {
+                document.getElementById('winMessage').style.display = 'block';
+            } else {
+                document.getElementById('winMessage').style.display = 'none';
+            }
+        }
+
+        // Check if a tile can be moved
+        function canMove(row, col) {
+            const rowDiff = Math.abs(row - emptyPos.row);
+            const colDiff = Math.abs(col - emptyPos.col);
+            return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+        }
+
+        // Move a tile
+        function moveTile(row, col) {
+            if (isWon || !canMove(row, col)) return;
+            
+            // Swap the tile with the empty space
+            board[emptyPos.row][emptyPos.col] = board[row][col];
+            board[row][col] = 0;
+            emptyPos = { row, col };
+            
+            moveCount++;
+            checkWin();
+            updateDisplay();
+        }
+
+        // Check if the puzzle is solved
+        function checkWin() {
+            let expectedValue = 1;
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (i === 3 && j === 3) {
+                        if (board[i][j] !== 0) return;
+                    } else {
+                        if (board[i][j] !== expectedValue) return;
+                        expectedValue++;
+                    }
+                }
+            }
+            isWon = true;
+        }
+
+        // Shuffle the puzzle
+        function shufflePuzzle() {
+            // Reset first
+            initializePuzzle();
+            
+            // Perform random valid moves to shuffle
+            for (let i = 0; i < 1000; i++) {
+                const possibleMoves = [];
+                
+                // Check all four directions
+                const directions = [
+                    { row: -1, col: 0 }, // Up
+                    { row: 1, col: 0 },  // Down
+                    { row: 0, col: -1 }, // Left
+                    { row: 0, col: 1 }   // Right
+                ];
+                
+                directions.forEach(dir => {
+                    const newRow = emptyPos.row + dir.row;
+                    const newCol = emptyPos.col + dir.col;
+                    
+                    if (newRow >= 0 && newRow < 4 && newCol >= 0 && newCol < 4) {
+                        possibleMoves.push({ row: newRow, col: newCol });
+                    }
+                });
+                
+                // Make a random move
+                const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                board[emptyPos.row][emptyPos.col] = board[randomMove.row][randomMove.col];
+                board[randomMove.row][randomMove.col] = 0;
+                emptyPos = randomMove;
+            }
+            
+            moveCount = 0;
+            isWon = false;
+            updateDisplay();
+        }
+
+        // Reset to solved state
+        function resetPuzzle() {
+            initializePuzzle();
+        }
+
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', function() {
+            createBoard();
+            initializePuzzle();
+            shufflePuzzle();
+        });
+    </script>
+</body>
+</html>
