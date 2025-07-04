@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSCP Simulation Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: #00ff00;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 20px;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #00ff00;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .terminal {
+            background: #000;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 400px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .terminal-header {
+            color: #ff0000;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .command-line {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .prompt {
+            color: #00ff00;
+            margin-right: 10px;
+        }
+
+        .command-input {
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            flex-grow: 1;
+        }
+
+        .output {
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .scenarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .scenario {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .scenario:hover {
+            border-color: #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        }
+
+        .scenario.active {
+            border-color: #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .scenario-title {
+            color: #ff0000;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .scenario-description {
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .scenario-status {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00 0%, #ff0000 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        .help-section {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .help-title {
+            color: #ff0000;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .help-commands {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .command {
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+
+        .command-name {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .command-desc {
+            color: #ccc;
+            font-size: 0.9em;
+        }
+
+        .flag {
+            background: #ff0000;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #00ff00;
+        }
+
+        .error {
+            color: #ff0000;
+        }
+
+        .warning {
+            color: #ffff00;
+        }
+
+        .blinking {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .network-map {
+            background: #000;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            font-family: monospace;
+        }
+
+        .target-machine {
+            display: inline-block;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .target-machine:hover {
+            border-color: #00ff00;
+        }
+
+        .target-machine.compromised {
+            border-color: #ff0000;
+            background: #330000;
+        }
+
+        .achievements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .achievement {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+
+        .achievement.unlocked {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">OSCP SIMULATION GAME</div>
+            <div class="subtitle">Offensive Security Certified Professional Training</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Score</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="flags">0</div>
+                <div class="stat-label">Flags</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="machines">0</div>
+                <div class="stat-label">Machines</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="time">00:00</div>
+                <div class="stat-label">Time</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="terminal">
+                <div class="terminal-header">KALI LINUX TERMINAL</div>
+                <div id="output"></div>
+                <div class="command-line">
+                    <span class="prompt">root@kali:~#</span>
+                    <input type="text" class="command-input" id="commandInput" placeholder="Enter command..." autocomplete="off">
+                </div>
+            </div>
+
+            <div class="network-map">
+                <div class="terminal-header">NETWORK MAP</div>
+                <div id="networkTargets"></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenarios">
+            <div class="scenario" data-scenario="recon">
+                <div class="scenario-title">🔍 Reconnaissance</div>
+                <div class="scenario-description">Gather information about target systems and services</div>
+                <div class="scenario-status">Status: Not Started</div>
+            </div>
+
+            <div class="scenario" data-scenario="scanning">
+                <div class="scenario-title">🔍 Vulnerability Scanning</div>
+                <div class="scenario-description">Identify potential security vulnerabilities</div>
+                <div class="scenario-status">Status: Locked</div>
+            </div>
+
+            <div class="scenario" data-scenario="exploit">
+                <div class="scenario-title">💥 Exploitation</div>
+                <div class="scenario-description">Exploit discovered vulnerabilities</div>
+                <div class="scenario-status">Status: Locked</div>
+            </div>
+
+            <div class="scenario" data-scenario="privesc">
+                <div class="scenario-title">⬆️ Privilege Escalation</div>
+                <div class="scenario-description">Escalate privileges to gain root access</div>
+                <div class="scenario-status">Status: Locked</div>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-title">📖 Available Commands</div>
+            <div class="help-commands">
+                <div class="command">
+                    <div class="command-name">nmap [target]</div>
+                    <div class="command-desc">Network mapping and port scanning</div>
+                </div>
+                <div class="command">
+                    <div class="command-name">nikto -h [target]</div>
+                    <div class="command-desc">Web vulnerability scanner</div>
+                </div>
+                <div class="command">
+                    <div class="command-name">dirb [target]</div>
+                    <div class="command-desc">Directory brute-force tool</div>
+                </div>
+                <div class="command">
+                    <div class="command-name">searchsploit [service]</div>
+                    <div class="command-desc">Search for exploits</div>
+                </div>
+                <div class="command">
+                    <div class="command-name">msfconsole</div>
+                    <div class="command-desc">Launch Metasploit framework</div>
+                </div>
+                <div class="command">
+                    <div class="command-name">nc [target] [port]</div>
+                    <div class="command-desc">Netcat connection tool</div>
+                </div>
+                <div class="command">
+                    <div class="command-name">gobuster dir</div>
+                    <div class="command-desc">Directory/file brute-forcer</div>
+                </div>
+                <div class="command">
+                    <div class="command-name">enum4linux [target]</div>
+                    <div class="command-desc">SMB enumeration tool</div>
+                </div>
+                <div class="command">
+                    <div class="command-name">help</div>
+                    <div class="command-desc">Show available commands</div>
+                </div>
+                <div class="command">
+                    <div class="command-name">clear</div>
+                    <div class="command-desc">Clear terminal screen</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="achievements">
+            <div class="achievement" id="achievement-first-scan">🎯 First Scan</div>
+            <div class="achievement" id="achievement-web-vuln">🌐 Web Vulnerability</div>
+            <div class="achievement" id="achievement-first-exploit">💥 First Exploit</div>
+            <div class="achievement" id="achievement-root-access">👑 Root Access</div>
+            <div class="achievement" id="achievement-all-flags">🏆 All Flags</div>
+        </div>
+    </div>
+
+    <script>
+        class OSCPGame {
+            constructor() {
+                this.score = 0;
+                this.flags = 0;
+                this.compromisedMachines = 0;
+                this.startTime = Date.now();
+                this.currentScenario = 'recon';
+                this.achievements = new Set();
+                this.gameState = {
+                    reconComplete: false,
+                    scanningComplete: false,
+                    exploitComplete: false,
+                    privescComplete: false
+                };
+                
+                this.targets = [
+                    { ip: '192.168.1.10', name: 'WEB-01', services: ['80', '443', '22'], os: 'Linux', compromised: false },
+                    { ip: '192.168.1.11', name: 'DB-01', services: ['3306', '22'], os: 'Linux', compromised: false },
+                    { ip: '192.168.1.12', name: 'WIN-01', services: ['139', '445', '3389'], os: 'Windows', compromised: false },
+                    { ip: '192.168.1.13', name: 'FTP-01', services: ['21', '22'], os: 'Linux', compromised: false }
+                ];
+                
+                this.foundVulnerabilities = new Set();
+                this.discoveredServices = new Set();
+                
+                this.initializeGame();
+            }
+
+            initializeGame() {
+                this.updateDisplay();
+                this.setupEventListeners();
+                this.renderNetworkMap();
+                this.updateTimer();
+                this.addOutput('Welcome to OSCP Simulation Game!', 'success');
+                this.addOutput('Type "help" for available commands.', 'success');
+                this.addOutput('Start with reconnaissance: nmap 192.168.1.0/24', 'success');
+            }
+
+            setupEventListeners() {
+                const commandInput = document.getElementById('commandInput');
+                commandInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.executeCommand(commandInput.value.trim());
+                        commandInput.value = '';
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        commandInput.focus();
+                    }
+                });
+
+                document.querySelectorAll('.scenario').forEach(scenario => {
+                    scenario.addEventListener('click', () => {
+                        this.selectScenario(scenario.dataset.scenario);
+                    });
+                });
+            }
+
+            executeCommand(command) {
+                if (!command) return;
+                
+                this.addOutput(`root@kali:~# ${command}`, 'success');
+                
+                const [cmd, ...args] = command.toLowerCase().split(' ');
+                
+                switch (cmd) {
+                    case 'help':
+                        this.showHelp();
+                        break;
+                    case 'clear':
+                        this.clearOutput();
+                        break;
+                    case 'nmap':
+                        this.executeNmap(args);
+                        break;
+                    case 'nikto':
+                        this.executeNikto(args);
+                        break;
+                    case 'dirb':
+                        this.executeDirb(args);
+                        break;
+                    case 'searchsploit':
+                        this.executeSearchsploit(args);
+                        break;
+                    case 'msfconsole':
+                        this.executeMsfconsole();
+                        break;
+                    case 'nc':
+                        this.executeNetcat(args);
+                        break;
+                    case 'gobuster':
+                        this.executeGobuster(args);
+                        break;
+                    case 'enum4linux':
+                        this.executeEnum4linux(args);
+                        break;
+                    case 'exploit':
+                        this.executeExploit(args);
+                        break;
+                    case 'sudo':
+                        this.executeSudo(args);
+                        break;
+                    default:
+                        this.addOutput(`Command not found: ${cmd}`, 'error');
+                }
+                
+                this.updateDisplay();
+            }
+
+            executeNmap(args) {
+                if (args.length === 0) {
+                    this.addOutput('Usage: nmap [target]', 'error');
+                    return;
+                }
+                
+                const target = args[0];
+                this.addOutput('Starting Nmap scan...', 'warning');
+                
+                setTimeout(() => {
+                    if (target.includes('192.168.1.')) {
+                        this.addOutput('Nmap scan report:', 'success');
+                        this.targets.forEach(t => {
+                            if (target.includes(t.ip) || target.includes('/24')) {
+                                this.addOutput(`Host: ${t.ip} (${t.name})`, 'success');
+                                this.addOutput(`Open ports: ${t.services.join(', ')}`, 'success');
+                                this.addOutput(`OS: ${t.os}`, 'success');
+                                this.addOutput('', 'success');
+                                t.services.forEach(service => {
+                                    this.discoveredServices.add(`${t.ip}:${service}`);
+                                });
+                            }
+                        });
+                        this.addOutput('Nmap scan completed!', 'success');
+                        this.addScore(100);
+                        this.unlockAchievement('achievement-first-scan');
+                        this.gameState.reconComplete = true;
+                        this.unlockScenario('scanning');
+                    } else {
+                        this.addOutput('Host seems down.', 'error');
+                    }
+                }, 1000);
+            }
+
+            executeNikto(args) {
+                if (args.length < 2 || args[0] !== '-h') {
+                    this.addOutput('Usage: nikto -h [target]', 'error');
+                    return;
+                }
+                
+                const target = args[1];
+                this.addOutput('Starting Nikto scan...', 'warning');
+                
+                setTimeout(() => {
+                    const webTarget = this.targets.find(t => t.ip === target && t.services.includes('80'));
+                    if (webTarget) {
+                        this.addOutput(`Nikto scan report for ${target}:`, 'success');
+                        this.addOutput('+ Server: Apache/2.4.41', 'success');
+                        this.addOutput('+ /admin/: Admin panel found', 'warning');
+                        this.addOutput('+ /backup/: Backup directory found', 'warning');
+                        this.addOutput('+ /phpmyadmin/: PHPMyAdmin installation found', 'warning');
+                        this.addOutput('+ Server may be vulnerable to XSS', 'error');
+                        this.addOutput('+ Directory indexing enabled', 'warning');
+                        this.foundVulnerabilities.add('web_xss');
+                        this.foundVulnerabilities.add('directory_indexing');
+                        this.addScore(150);
+                        this.unlockAchievement('achievement-web-vuln');
+                    } else {
+                        this.addOutput('No web server found on target.', 'error');
+                    }
+                }, 1500);
+            }
+
+            executeDirb(args) {
+                if (args.length === 0) {
+                    this.addOutput('Usage: dirb [target]', 'error');
+                    return;
+                }
+                
+                const target = args[0];
+                this.addOutput('Starting DIRB scan...', 'warning');
+                
+                setTimeout(() => {
+                    this.addOutput('DIRB scan results:', 'success');
+                    this.addOutput('+ http://target/admin/ (CODE:200)', 'success');
+                    this.addOutput('+ http://target/backup/ (CODE:200)', 'success');
+                    this.addOutput('+ http://target/uploads/ (CODE:200)', 'success');
+                    this.addOutput('+ http://target/config/ (CODE:403)', 'warning');
+                    this.addOutput('DIRB scan completed!', 'success');
+                    this.addScore(75);
+                }, 1200);
+            }
+
+            executeSearchsploit(args) {
+                if (args.length === 0) {
+                    this.addOutput('Usage: searchsploit [service]', 'error');
+                    return;
+                }
+                
+                const service = args.join(' ');
+                this.addOutput(`Searching exploits for: ${service}`, 'warning');
+                
+                setTimeout(() => {
+                    this.addOutput('Exploit Database Search Results:', 'success');
+                    this.addOutput('Apache 2.4.41 - Remote Code Execution | php/webapps/47887.py', 'success');
+                    this.addOutput('PHPMyAdmin 4.8.1 - Remote Code Execution | php/webapps/50457.py', 'success');
+                    this.addOutput('MySQL 5.7 - SQL Injection | multiple/remote/40360.py', 'success');
+                    this.addOutput('', 'success');
+                    this.addOutput('Use: exploit [exploit_name] to use an exploit', 'warning');
+                    this.addScore(50);
+                }, 800);
+            }
+
+            executeMsfconsole() {
+                this.addOutput('Starting Metasploit Framework...', 'warning');
+                
+                setTimeout(() => {
+                    this.addOutput('', 'success');
+                    this.addOutput('       =[ metasploit v6.1.8-dev                           ]', 'success');
+                    this.addOutput('+ -- --=[ 2180 exploits - 1155 auxiliary - 399 post     ]', 'success');
+                    this.addOutput('+ -- --=[ 596 payloads - 45 encoders - 10 nops          ]', 'success');
+                    this.addOutput('+ -- --=[ 7 evasion                                      ]', 'success');
+                    this.addOutput('', 'success');
+                    this.addOutput('msf6 > ', 'success');
+                    this.addOutput('Type "exploit [target]" to launch an exploit', 'warning');
+                    this.addScore(25);
+                }, 1000);
+            }
+
+            executeNetcat(args) {
+                if (args.length < 2) {
+                    this.addOutput('Usage: nc [target] [port]', 'error');
+                    return;
+                }
+                
+                const target = args[0];
+                const port = args[1];
+                
+                this.addOutput(`Connecting to ${target}:${port}...`, 'warning');
+                
+                setTimeout(() => {
+                    if (this.discoveredServices.has(`${target}:${port}`)) {
+                        this.addOutput(`Connected to ${target}:${port}`, 'success');
+                        this.addOutput('Service banner: OpenSSH 7.4', 'success');
+                        this.addScore(25);
+                    } else {
+                        this.addOutput('Connection failed.', 'error');
+                    }
+                }, 500);
+            }
+
+            executeGobuster(args) {
+                this.addOutput('Starting Gobuster directory scan...', 'warning');
+                
+                setTimeout(() => {
+                    this.addOutput('Gobuster scan results:', 'success');
+                    this.addOutput('/admin                (Status: 200) [Size: 1234]', 'success');
+                    this.addOutput('/backup               (Status: 200) [Size: 567]', 'success');
+                    this.addOutput('/uploads              (Status: 200) [Size: 890]', 'success');
+                    this.addOutput('/flag.txt             (Status: 200) [Size: 42]', 'warning');
+                    this.addOutput('Gobuster scan completed!', 'success');
+                    this.addScore(100);
+                }, 1000);
+            }
+
+            executeEnum4linux(args) {
+                if (args.length === 0) {
+                    this.addOutput('Usage: enum4linux [target]', 'error');
+                    return;
+                }
+                
+                const target = args[0];
+                this.addOutput(`Starting enum4linux scan on ${target}...`, 'warning');
+                
+                setTimeout(() => {
+                    this.addOutput('SMB enumeration results:', 'success');
+                    this.addOutput('Domain: WORKGROUP', 'success');
+                    this.addOutput('Users: administrator, guest, user1', 'success');
+                    this.addOutput('Shares: C$, Admin$, backup', 'success');
+                    this.addOutput('Potential vulnerability: MS17-010', 'error');
+                    this.foundVulnerabilities.add('ms17-010');
+                    this.addScore(125);
+                }, 1200);
+            }
+
+            executeExploit(args) {
+                if (args.length === 0) {
+                    this.addOutput('Usage: exploit [target] or exploit [exploit_name]', 'error');
+                    return;
+                }
+                
+                const target = args[0];
+                this.addOutput(`Launching exploit against ${target}...`, 'warning');
+                
+                setTimeout(() => {
+                    if (this.foundVulnerabilities.size > 0) {
+                        this.addOutput('Exploit successful!', 'success');
+                        this.addOutput('Gained shell access: www-data@target', 'success');
+                        this.addOutput('Flag found: <span class="flag">flag{c0mpr0m1s3d_w3b_s3rv3r}</span>', 'success');
+                        this.addScore(300);
+                        this.flags++;
+                        this.compromisedMachines++;
+                        this.unlockAchievement('achievement-first-exploit');
+                        this.gameState.exploitComplete = true;
+                        this.unlockScenario('privesc');
+                        this.updateNetworkMap();
+                    } else {
+                        this.addOutput('Exploit failed. Need to find vulnerabilities first.', 'error');
+                    }
+                }, 1500);
+            }
+
+            executeSudo(args) {
+                if (args.length === 0) {
+                    this.addOutput('Usage: sudo [command]', 'error');
+                    return;
+                }
+                
+                const command = args.join(' ');
+                this.addOutput(`Executing: sudo ${command}`, 'warning');
+                
+                setTimeout(() => {
+                    if (this.gameState.exploitComplete) {
+                        this.addOutput('Privilege escalation successful!', 'success');
+                        this.addOutput('root@target:~# whoami', 'success');
+                        this.addOutput('root', 'success');
+                        this.addOutput('Root flag: <span class="flag">flag{r00t_4cc3ss_4ch13v3d}</span>', 'success');
+                        this.addScore(500);
+                        this.flags++;
+                        this.unlockAchievement('achievement-root-access');
+                        this.gameState.privescComplete = true;
+                        
+                        if (this.flags >= 5) {
+                            this.unlockAchievement('achievement-all-flags');
+                        }
+                    } else {
+                        this.addOutput('Permission denied. Need to compromise the system first.', 'error');
+                    }
+                }, 1000);
+            }
+
+            showHelp() {
+                this.addOutput('Available commands:', 'success');
+                this.addOutput('nmap [target]         - Network scanning', 'success');
+                this.addOutput('nikto -h [target]     - Web vulnerability scanner', 'success');
+                this.addOutput('dirb [target]         - Directory brute-force', 'success');
+                this.addOutput('searchsploit [service] - Search for exploits', 'success');
+                this.addOutput('msfconsole           - Metasploit framework', 'success');
+                this.addOutput('nc [target] [port]   - Connect to target', 'success');
+                this.addOutput('gobuster dir         - Directory enumeration', 'success');
+                this.addOutput('enum4linux [target]  - SMB enumeration', 'success');
+                this.addOutput('exploit [target]     - Execute exploit', 'success');
+                this.addOutput('sudo [command]       - Execute with elevated privileges', 'success');
+                this.addOutput('clear                - Clear screen', 'success');
+                this.addOutput('help                 - Show this help', 'success');
+            }
+
+            clearOutput() {
+                document.getElementById('output').innerHTML = '';
+            }
+
+            addOutput(text, className = '') {
+                const output = document.getElementById('output');
+                const line = document.createElement('div');
+                line.className = `output ${className}`;
+                line.innerHTML = text;
+                output.appendChild(line);
+                output.scrollTop = output.scrollHeight;
+            }
+
+            addScore(points) {
+                this.score += points;
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('flags').textContent = this.flags;
+                document.getElementById('machines').textContent = this.compromisedMachines;
+            }
+
+            updateTimer() {
+                const timer = document.getElementById('time');
+                setInterval(() => {
+                    const elapsed = Date.now() - this.startTime;
+                    const minutes = Math.floor(elapsed / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+
+            selectScenario(scenario) {
+                document.querySelectorAll('.scenario').forEach(s => s.classList.remove('active'));
+                document.querySelector(`[data-scenario="${scenario}"]`).classList.add('active');
+                this.currentScenario = scenario;
+            }
+
+            unlockScenario(scenario) {
+                const scenarioElement = document.querySelector(`[data-scenario="${scenario}"]`);
+                if (scenarioElement) {
+                    scenarioElement.querySelector('.scenario-status').textContent = 'Status: Available';
+                    scenarioElement.style.borderColor = '#00ff00';
+                }
+            }
+
+            unlockAchievement(achievementId) {
+                const achievement = document.getElementById(achievementId);
+                if (achievement && !this.achievements.has(achievementId)) {
+                    achievement.classList.add('unlocked');
+                    this.achievements.add(achievementId);
+                    this.addOutput(`🏆 Achievement unlocked: ${achievement.textContent}`, 'success');
+                }
+            }
+
+            renderNetworkMap() {
+                const networkTargets = document.getElementById('networkTargets');
+                networkTargets.innerHTML = '';
+                
+                this.targets.forEach(target => {
+                    const targetElement = document.createElement('div');
+                    targetElement.className = `target-machine ${target.compromised ? 'compromised' : ''}`;
+                    targetElement.innerHTML = `
+                        <div>${target.name}</div>
+                        <div>${target.ip}</div>
+                        <div>${target.os}</div>
+                    `;
+                    networkTargets.appendChild(targetElement);
+                });
+            }
+
+            updateNetworkMap() {
+                if (this.compromisedMachines > 0) {
+                    this.targets[0].compromised = true;
+                    this.renderNetworkMap();
+                    const progress = (this.compromisedMachines / this.targets.length) * 100;
+                    document.getElementById('progressFill').style.width = `${progress}%`;
+                }
+            }
+        }
+
+        // Initialize the game
+        const game = new OSCPGame();
+    </script>
+</body>
+</html>
