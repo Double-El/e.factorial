@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>백제 유적지 지도 - 웅진과 사비의 역사</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+        }
+
+        .period-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover {
+            background: #bdc3c7;
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .map-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 15px;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            height: fit-content;
+        }
+
+        .info-panel h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .info-panel p {
+            color: #7f8c8d;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .legend {
+            margin-bottom: 25px;
+        }
+
+        .legend h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .legend-marker {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .legend-marker.ungjin {
+            background: #e74c3c;
+        }
+
+        .legend-marker.sabi {
+            background: #27ae60;
+        }
+
+        .share-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .share-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .share-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .social-btn.facebook {
+            background: #3b5998;
+            color: white;
+        }
+
+        .social-btn.twitter {
+            background: #1da1f2;
+            color: white;
+        }
+
+        .social-btn.kakao {
+            background: #fee500;
+            color: #3c1e1e;
+        }
+
+        .social-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .marker-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .popup-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #7f8c8d;
+            cursor: pointer;
+            z-index: 1001;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #e74c3c;
+        }
+
+        .popup-header {
+            padding: 25px 25px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popup-header h3 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .period-badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: white;
+        }
+
+        .period-badge.ungjin {
+            background: #e74c3c;
+        }
+
+        .period-badge.sabi {
+            background: #27ae60;
+        }
+
+        .popup-body {
+            padding: 25px;
+        }
+
+        .popup-image {
+            width: 100%;
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .popup-description {
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        .popup-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .popup-details h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .popup-details p {
+            color: #7f8c8d;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-panel {
+                order: -1;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .tab-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
+            #map {
+                height: 500px;
+            }
+            
+            .popup-content {
+                margin: 10px;
+                max-height: 90vh;
+            }
+            
+            .popup-header {
+                padding: 20px 20px 15px;
+            }
+            
+            .popup-body {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .period-tabs {
+                gap: 5px;
+            }
+            
+            .tab-btn {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+            
+            .share-links {
+                flex-direction: column;
+            }
+            
+            .social-btn {
+                margin-bottom: 5px;
+            }
+        }
+
+        /* 지도 마커 스타일 */
+        .custom-marker {
+            background: #e74c3c;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .custom-marker.sabi {
+            background: #27ae60;
+        }
+
+        /* 애니메이션 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .marker-popup.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .popup-content {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🏛️백제 역사의 보물 찾기: 공주와 부여 여행!</h1>
+            <p class="subtitle">친구들, 오늘은 우리 역사 속에 숨어 있는 멋진 이야기, 바로 백제에 대해 알아볼 거예요. 백제는 옛날에 우리나라에 있던 나라 중 하나랍니다. 백제가 힘이 약해져서 나라의 수도를 두 번이나 옮겼다는 사실, 알고 있었나요?</p>
+            <div class="period-tabs">
+                <button class="tab-btn active" data-period="all">전체</button>
+                <button class="tab-btn" data-period="ungjin">웅진 시기</button>
+                <button class="tab-btn" data-period="sabi">사비 시기</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="info-content">
+                    <h2>🗺️ 첫 번째 수도인 웅진(지금의 공주)과 두 번째 수도인 사비(지금의 부여)에 어떤 보물들이 남아 있는지 함께 살펴볼까요?</h2>
+                    <p>지도에서 마커를 클릭하면 각 유적지의 상세 정보를 확인할 수 있습니다.</p>
+                    
+                    <div class="legend">
+                        <h3>👑 웅진 시대 (475년 ~ 538년) - 백제의 두 번째 수도, 공주</h3>
+                        <div class="legend-item">
+                            <span class="legend-marker ungjin"></span>
+                            <span>백제는 원래 서울 쪽에 있었지만, 고구려의 공격을 받고 웅진(지금의 공주)으로 수도를 옮겼어요. 공주에는 백제 시대의 흔적이 많이 남아 있답니다.</span>
+                        </div>
+                        <h3>✨ 사비 시대 (538년 ~ 660년) - 백제의 마지막 수도, 부여</h3>
+                        <div class="legend-item">
+                            <span class="legend-marker sabi"></span>
+                            <span>백제는 나라의 힘을 다시 키우기 위해 수도를 더 넓은 땅인 사비(지금의 부여)로 옮겼어요. 부여는 백제의 마지막 불꽃을 태운 곳이랍니다.</span>
+                        </div>
+                    </div>
+
+                    <div class="share-section">
+                        <h3>공유하기</h3>
+                        <button id="shareBtn" class="share-btn">지도 공유하기</button>
+                        <div class="share-links">
+                            <button class="social-btn facebook" data-platform="facebook">Facebook</button>
+                            <button class="social-btn twitter" data-platform="twitter">Twitter</button>
+                            <button class="social-btn kakao" data-platform="kakao">카카오톡</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 마커 정보 팝업 -->
+        <div id="markerPopup" class="marker-popup">
+            <div class="popup-content">
+                <button class="close-btn">&times;</button>
+                <div class="popup-header">
+                    <h3 id="popupTitle"></h3>
+                    <span id="popupPeriod" class="period-badge"></span>
+                </div>
+                <div class="popup-body">
+                    <div id="popupImage" class="popup-image"></div>
+                    <div id="popupDescription"></div>
+                    <div id="popupDetails"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 백제 유적지 데이터
+        const baekjeSites = {
+            ungjin: [
+                {
+                    id: 'gongsanseong',
+                    name: '공산성(웅진성)',
+                    lat: 36.4614,
+                    lng: 127.1208,
+                    period: '웅진 시기 (475-538)',
+                    description: '공산성은 백제가 수도를 공주로 옮긴 후 왕궁을 지키기 위해 만든 튼튼한 성이에요. 웅진성이 있던 곳은 금강이라는 강을 끼고 있어서 적이 쉽게 쳐들어올 수 없었대요.',
+                    details: `
+                        <h4>🏰 신기한 성 이야기</h4>
+                        <p>• 이 성은 산을 따라 길게 이어져 있는데, 마치 긴 뱀이 기어가는 것처럼 생겼답니다</p>
+                        <p>• 성벽의 일부는 흙으로, 일부는 돌로 만들어져서 당시 사람들이 얼마나 똑똑했는지 알 수 있어요</p>
+                        <p>• 공산성 안에는 백제 시대의 왕궁 터가 남아 있어요</p>
+                        <p>• 금강이라는 강을 끼고 있어서 적이 쉽게 쳐들어올 수 없었답니다</p>
+                    `,
+                    image: '🏰'
+                },
+                {
+                    id: 'songsanri',
+                    name: '송산리 고분군(무령왕릉 포함)',
+                    lat: 36.4500,
+                    lng: 127.1100,
+                    period: '웅진 시기 (475-538)',
+                    description: '공산성 근처에는 왕과 왕족의 무덤들이 모여 있는 곳이 있어요. 바로 송산리 고분군이에요. 이 무덤들은 아주 오래전에 만들어졌는데, 1971년에 길을 만들다가 우연히 발견되었답니다.',
+                    details: `
+                        <h4>👑 무령왕릉이 왜 중요할까?</h4>
+                        <p>• 무령왕릉 안은 벽돌로 만들어져 있어서 중국의 영향을 받았다는 것을 알 수 있어요</p>
+                        <p>• 무덤에서 금으로 만든 왕의 모자, 금동 신발, 예쁜 장신구 등 4,600개가 넘는 귀한 보물들이 나왔어요</p>
+                        <p>• 이 보물들은 백제가 다른 나라들과 활발하게 교류했다는 증거가 된답니다</p>
+                        <p>• 17개의 보물이 국보로 지정되어 우리나라의 소중한 문화재가 되었어요</p>
+                    `,
+                    image: '👑'
+                },
+                {
+                    id: 'gongju_museum',
+                    name: '국립공주박물관',
+                    lat: 36.4583,
+                    lng: 127.1167,
+                    period: '웅진 시기 (475-538)',
+                    description: '무령왕릉에서 나온 보물들을 직접 보고 싶다고요? 그럼 국립공주박물관으로 가보세요! 이곳에서는 무령왕릉에서 나온 금관, 금동 신발, 아름다운 청동 거울 등을 볼 수 있어요.',
+                    details: `
+                        <h4>🖼️ 박물관에서 만나는 보물들</h4>
+                        <p>• 무령왕릉에서 나온 금으로 만든 왕의 모자와 신발을 직접 볼 수 있어요</p>
+                        <p>• 백제 사람들이 만든 아름다운 청동 거울도 전시되어 있답니다</p>
+                        <p>• 약 1만 개의 소중한 보물들이 보관되어 있어요 (19개는 국보예요!)</p>
+                        <p>• 백제 사람들의 뛰어난 솜씨를 직접 눈으로 확인해 보세요</p>
+                    `,
+                    image: '🏛️'
+                }
+            ],
+            sabi: [
+                {
+                    id: 'busosanseong',
+                    name: '부소산성(사비성)',
+                    lat: 36.2756,
+                    lng: 126.9100,
+                    period: '사비 시기 (538-660)',
+                    description: '부여에 있는 부소산성은 왕궁의 뒷마당이자, 위험할 때 왕이 피난 갈 수 있도록 만든 성이에요. 이 성벽은 모두 흙으로 만들어졌어요.',
+                    details: `
+                        <h4>🌳 가슴 아픈 전설</h4>
+                        <p>• 부소산성에는 낙화암이라는 절벽이 있어요</p>
+                        <p>• 백제가 망할 때, 궁녀들이 적에게 잡히지 않기 위해 절벽 아래로 몸을 던졌다는 슬픈 이야기가 전해진답니다</p>
+                        <p>• 그래서 이곳은 백제의 마지막을 보여주는 곳으로 유명해요</p>
+                        <p>• 성벽은 모두 흙으로 만들어져서 당시 사람들의 지혜를 보여줍니다</p>
+                    `,
+                    image: '🏔️'
+                },
+                {
+                    id: 'jeongrimsa',
+                    name: '정림사지(정림사 터)',
+                    lat: 36.2750,
+                    lng: 126.9167,
+                    period: '사비 시기 (538-660)',
+                    description: '정림사지는 백제 시대의 큰 절터예요. 도시 한가운데에 왕궁과 함께 지어진 것으로 보아, 백제 사람들에게 불교가 얼마나 중요했는지 알 수 있어요.',
+                    details: `
+                        <h4>🏯 오층석탑의 비밀</h4>
+                        <p>• 지금은 아름다운 오층석탑과 석불좌상이 남아 있어요</p>
+                        <p>• 이 탑에는 당나라가 백제를 멸망시킨 것을 기념하는 글이 새겨져 있어요</p>
+                        <p>• 그래서 이 탑은 백제의 아픈 역사를 담고 있는 증거이기도 해요</p>
+                        <p>• 동쪽과 서쪽에 연못이 있었던 큰 절이었답니다</p>
+                    `,
+                    image: '🏯'
+                },
+                {
+                    id: 'gungnamji',
+                    name: '궁남지(왕궁 남쪽 연못)',
+                    lat: 36.2700,
+                    lng: 126.9200,
+                    period: '사비 시기 (538-660)',
+                    description: '궁남지는 우리나라에서 가장 먼저 만들어진 인공 연못이라고 해요. 백제 30대 왕인 무왕이 왕궁 남쪽에 만들었다고 해서 \'궁남지\'라는 이름이 붙었대요.',
+                    details: `
+                        <h4>⛲️ 예쁜 풍경</h4>
+                        <p>• 여름에는 연못 가득 연꽃이 피어나서 정말 예뻐요</p>
+                        <p>• 연못 한가운데 있는 포룡정이라는 정자도 멋지답니다</p>
+                        <p>• 백제 사람들의 조경술과 미적 감각을 보여주는 작품이에요</p>
+                        <p>• 우리나라 조경 역사에서 가장 중요한 의미를 지니는 곳이랍니다</p>
+                    `,
+                    image: '🏞️'
+                },
+                {
+                    id: 'neungsanri',
+                    name: '능산리 고분군',
+                    lat: 36.2800,
+                    lng: 126.9300,
+                    period: '사비 시기 (538-660)',
+                    description: '부여에도 왕이나 귀족의 무덤이 모여 있는 능산리 고분군이 있어요. 이곳에서는 무령왕릉보다 더 발전된 형태로 만들어진 무덤들을 볼 수 있어요.',
+                    details: `
+                        <h4>🏺 백제 금동대향로</h4>
+                        <p>• 능산리 근처 절터에서는 금동대향로라는 아주 멋진 보물이 발견되었어요</p>
+                        <p>• 이 향로는 마치 산속에 있는 신선들의 세계를 표현한 것처럼 복잡하고 아름답게 만들어졌어요</p>
+                        <p>• 높이 64cm, 무게 11.8kg의 큰 향로로 1996년 국보 287호로 지정되었답니다</p>
+                        <p>• 백제 사람들이 얼마나 뛰어난 예술가였는지 알 수 있답니다</p>
+                    `,
+                    image: '⚱️'
+                },
+                {
+                    id: 'buyeo_museum',
+                    name: '국립부여박물관',
+                    lat: 36.2750,
+                    lng: 126.9100,
+                    period: '사비 시기 (538-660)',
+                    description: '국립부여박물관은 금동대향로를 비롯해 부여에서 발견된 보물들을 모두 모아 놓은 곳이에요. 백제 사람들의 멋진 불교 미술품과 생활 도구들을 보며 당시 사람들의 삶을 상상해 볼 수 있어요.',
+                    details: `
+                        <h4>🖼️ 박물관에서 만나는 보물들</h4>
+                        <p>• 능산리 절터에서 발견된 멋진 금동대향로를 직접 볼 수 있어요</p>
+                        <p>• 사비 시기의 아름다운 불교 미술품과 도자기들이 전시되어 있답니다</p>
+                        <p>• 백제 사람들이 사용했던 일상생활 도구들도 볼 수 있어요</p>
+                        <p>• 사비 시기 백제 문화의 정수를 보여주는 소중한 공간이랍니다</p>
+                    `,
+                    image: '🏛️'
+                },
+                {
+                    id: 'baekje_cultural_park',
+                    name: '백제문화단지',
+                    lat: 36.2600,
+                    lng: 126.9000,
+                    period: '사비 시기 (538-660)',
+                    description: '백제문화단지는 옛날 백제 시대의 궁궐, 마을, 성을 오늘날에 그대로 되살려 놓은 곳이에요. 이곳에 가면 마치 시간 여행을 한 것처럼 백제 시대 사람들의 옷을 입어보고, 옛날 집을 구경하며 다양한 체험을 할 수 있답니다.',
+                    details: `
+                        <h4>🏰 시간 여행 체험</h4>
+                        <p>• 3.3km² 규모의 큰 역사 테마파크예요</p>
+                        <p>• 사비 궁궐의 정전·중전·생활 구역을 그대로 재현했어요</p>
+                        <p>• 부소산성과 능산리 마을도 복원해서 볼 수 있답니다</p>
+                        <p>• 백제 사람들의 일상생활과 직업, 공예를 직접 체험할 수 있어요</p>
+                        <p>• 과거 유적을 보존하면서도 현대적으로 활용하는 멋진 공간이랍니다</p>
+                    `,
+                    image: '🎭'
+                }
+            ]
+        };
+
+        // 지도와 마커 관련 변수
+        let map;
+        let markers = [];
+        let currentFilter = 'all';
+
+        // 지도 초기화
+        function initMap() {
+            // 공주와 부여의 중간 지점을 중심으로 설정
+            map = L.map('map').setView([36.3683, 127.0154], 10);
+            
+            // 타일 레이어 추가 (OpenStreetMap 사용)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // 모든 유적지 마커 추가
+            addAllMarkers();
+        }
+
+        // 모든 마커 추가
+        function addAllMarkers() {
+            // 기존 마커 제거
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            
+            // 웅진 시기 마커 추가
+            baekjeSites.ungjin.forEach(site => {
+                if (currentFilter === 'all' || currentFilter === 'ungjin') {
+                    addMarker(site, 'ungjin');
+                }
+            });
+            
+            // 사비 시기 마커 추가
+            baekjeSites.sabi.forEach(site => {
+                if (currentFilter === 'all' || currentFilter === 'sabi') {
+                    addMarker(site, 'sabi');
+                }
+            });
+        }
+
+        // 개별 마커 추가
+        function addMarker(site, period) {
+            const marker = L.circleMarker([site.lat, site.lng], {
+                radius: 12,
+                fillColor: period === 'ungjin' ? '#e74c3c' : '#27ae60',
+                color: 'white',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+            
+            // 마커 클릭 이벤트
+            marker.on('click', function() {
+                showMarkerPopup(site);
+            });
+            
+            // 마커 호버 이벤트
+            marker.on('mouseover', function() {
+                this.setStyle({
+                    radius: 15,
+                    fillOpacity: 1
+                });
+            });
+            
+            marker.on('mouseout', function() {
+                this.setStyle({
+                    radius: 12,
+                    fillOpacity: 0.8
+                });
+            });
+            
+            markers.push(marker);
+        }
+
+        // 마커 팝업 표시
+        function showMarkerPopup(site) {
+            const popup = document.getElementById('markerPopup');
+            const title = document.getElementById('popupTitle');
+            const period = document.getElementById('popupPeriod');
+            const image = document.getElementById('popupImage');
+            const description = document.getElementById('popupDescription');
+            const details = document.getElementById('popupDetails');
+            
+            title.textContent = site.name;
+            period.textContent = site.period;
+            period.className = `period-badge ${site.period.includes('웅진') ? 'ungjin' : 'sabi'}`;
+            image.innerHTML = `<div style="font-size: 4rem;">${site.image}</div>`;
+            description.textContent = site.description;
+            details.innerHTML = site.details;
+            
+            popup.classList.add('show');
+            popup.style.display = 'flex';
+        }
+
+        // 마커 팝업 닫기
+        function closeMarkerPopup() {
+            const popup = document.getElementById('markerPopup');
+            popup.classList.remove('show');
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 300);
+        }
+
+        // 기간 필터 변경
+        function changePeriodFilter(period) {
+            currentFilter = period;
+            
+            // 탭 버튼 활성화 상태 변경
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-period="${period}"]`).classList.add('active');
+            
+            // 마커 다시 그리기
+            addAllMarkers();
+        }
+
+        // 공유 기능
+        function shareMap() {
+            const url = window.location.href;
+            const title = '백제 유적지 지도 - 웅진과 사비의 역사';
+            const text = '백제의 웅진 시기와 사비 시기 유적지들을 지도에서 확인해보세요!';
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: text,
+                    url: url
+                });
+            } else {
+                // 클립보드에 URL 복사
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('지도 URL이 클립보드에 복사되었습니다!');
+                });
+            }
+        }
+
+        // 소셜 미디어 공유
+        function shareToSocial(platform) {
+            const url = encodeURIComponent(window.location.href);
+            const title = encodeURIComponent('백제 유적지 지도 - 웅진과 사비의 역사');
+            const text = encodeURIComponent('백제의 웅진 시기와 사비 시기 유적지들을 지도에서 확인해보세요!');
+            
+            let shareUrl = '';
+            
+            switch(platform) {
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
+                    break;
+                case 'kakao':
+                    // 카카오톡 공유는 Kakao SDK가 필요하므로 일반 링크로 대체
+                    shareUrl = `https://story.kakao.com/share?url=${url}`;
+                    break;
+            }
+            
+            if (shareUrl) {
+                window.open(shareUrl, '_blank', 'width=600,height=400');
+            }
+        }
+
+        // 이벤트 리스너 등록
+        document.addEventListener('DOMContentLoaded', function() {
+            // 지도 초기화
+            initMap();
+            
+            // 탭 버튼 이벤트
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const period = this.getAttribute('data-period');
+                    changePeriodFilter(period);
+                });
+            });
+            
+            // 공유 버튼 이벤트
+            document.getElementById('shareBtn').addEventListener('click', shareMap);
+            
+            // 소셜 미디어 공유 버튼 이벤트
+            document.querySelectorAll('.social-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const platform = this.getAttribute('data-platform');
+                    shareToSocial(platform);
+                });
+            });
+            
+            // 팝업 닫기 버튼 이벤트
+            document.querySelector('.close-btn').addEventListener('click', closeMarkerPopup);
+            
+            // 팝업 배경 클릭 시 닫기
+            document.getElementById('markerPopup').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeMarkerPopup();
+                }
+            });
+            
+            // ESC 키로 팝업 닫기
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeMarkerPopup();
+                }
+            });
+        });
+
+        // 반응형 지도 크기 조정
+        window.addEventListener('resize', function() {
+            if (map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
