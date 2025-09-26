@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E.Factorial Agent Demo</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js" integrity="sha512-e7PoR1N0DpSL/ij9uRNGU0TA7yDfVG/0PsGUAts2sYg6by5PAH8Nx48fG29Pgqpt9fEHHSXxT+xedd9tFHY1VQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <header>
+    <h1>E.Factorial Agent Demo</h1>
+    <p>Select a scripted scenario and chat with the agent to see the recommended LangGraph pipeline and explanation.</p>
+  </header>
+
+  <main>
+    <section class="sidebar">
+      <label for="scenarioSelect">Scenario</label>
+      <select id="scenarioSelect"></select>
+      <div class="conversation" id="conversation"></div>
+      <form id="chatForm">
+        <input type="text" id="messageInput" placeholder="Ask the agent..." required />
+        <button type="submit">Send</button>
+      </form>
+      <div class="actions">
+        <button id="approveButton" class="primary">Approve Pipeline</button>
+        <button id="requestChangesButton" class="secondary">Request Changes</button>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="panel">
+        <h2>Pipeline DAG</h2>
+        <svg id="pipelineGraph" role="img" aria-label="LangGraph pipeline diagram"></svg>
+      </div>
+      <div class="panel explanation">
+        <h2>Agent Explanation</h2>
+        <div id="explanation"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
