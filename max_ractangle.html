@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rectangle Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+</head>
+<body>
+    <div id="sliderContainer">
+        <label for="lengthSlider">Length of wire for rectangle: </label>
+        <input type="range" id="lengthSlider" min="0" max="100" value="50" oninput="updateLength(this.value)">
+        <span id="lengthDisplay">50</span>
+    </div>
+    <div id="areaContainer">
+        <label for="areaDisplay">Maximized area: </label>
+        <span id="areaDisplay">0</span>
+    </div>
+    <canvas id="myCanvas" width="400" height="400"></canvas>
+    <script>
+        // total length of the wire
+        var L = 100;
+
+        // initial length of the wire cut for the rectangle
+        var x = L / 2;
+
+        function setup() {
+            createCanvas(400, 400);
+            noLoop();
+        }
+
+        function draw() {
+            background(220);
+
+            // calculate the dimensions of the rectangle
+            var a = x / 2;
+            var b = x / 2;
+
+            // draw the rectangle
+            rectMode(CENTER);
+            rect(width / 2, height / 2, a, b);
+
+            // calculate the area of the rectangle
+            var area = a * b;
+
+            // display the area
+            document.getElementById('areaDisplay').textContent = area.toFixed(2);
+        }
+
+        function updateLength(value) {
+            // update x based on the slider value
+            x = value;
+
+            // update the length display
+            document.getElementById('lengthDisplay').textContent = value;
+
+            // redraw the rectangle
+            redraw();
+        }
+    </script>
+</body>
+</html>

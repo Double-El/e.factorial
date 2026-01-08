@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+
+<div id="myDiv"><!-- Plotly chart will be drawn inside this DIV --></div>
+<script>
+    // Gradient Descent Function
+    function gradientDescent(f, dfdx, dfdy, x_start, y_start, learning_rate, epochs) {
+        let x = x_start, y = y_start;
+        let results = [];
+        for(let i = 0; i < epochs; i++) {
+            results.push({x: x, y: y, z: f(x, y)});
+            let grad_x = dfdx(x, y);
+            let grad_y = dfdy(x, y);
+            x = x - learning_rate * grad_x;
+            y = y - learning_rate * grad_y;
+        }
+        return results;
+    }
+
+    // Define the function and its derivatives
+    let f = (x, y) => Math.pow(x, 2) + Math.pow(y, 2);
+    let dfdx = (x, y) => 2 * x;
+    let dfdy = (x, y) => 2 * y;
+
+    // Generate Data
+    let data = gradientDescent(f, dfdx, dfdy, -6, -6, 0.1, 50);
+    let trace1 = {
+        x: data.map(point => point.x),
+        y: data.map(point => point.y),
+        z: data.map(point => point.z),
+        mode: 'lines',
+        type: 'scatter3d',
+        name: 'Gradient Descent',
+        marker: { size: 12 }
+    };
+
+    let layout = {
+        title: 'Gradient Descent Algorithm Visualization',
+        scene: {
+            xaxis: {title: 'x'},
+            yaxis: {title: 'y'},
+            zaxis: {title: 'z'}
+        }
+    };
+
+    let plot_data = [trace1];
+
+    Plotly.newPlot('myDiv', plot_data, layout);
+</script>
+
+</body>
+</html>
