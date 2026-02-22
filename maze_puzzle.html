@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simple Maze Puzzle</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --text: #e5e7eb;
+      --wall: #334155;
+      --path: #e2e8f0;
+      --player: #f97316;
+      --goal: #22c55e;
+      --start: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(160deg, #020617, #0f172a);
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .game {
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 14px;
+      padding: 18px;
+      width: min(92vw, 560px);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.35rem;
+    }
+
+    .info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 0 14px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .info span {
+      opacity: 0.92;
+      font-size: 0.95rem;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .maze {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 3px;
+      background: rgba(2, 6, 23, 0.6);
+      padding: 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      user-select: none;
+    }
+
+    .cell {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 4px;
+      transition: transform 120ms ease;
+    }
+
+    .wall { background: var(--wall); }
+    .path { background: var(--path); }
+    .start { background: var(--start); }
+    .goal { background: var(--goal); }
+    .player {
+      background: var(--player);
+      outline: 2px solid #fff;
+      transform: scale(0.9);
+    }
+
+    .legend {
+      margin-top: 12px;
+      font-size: 0.88rem;
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+
+    #status {
+      margin-top: 8px;
+      min-height: 1.2em;
+      color: #a7f3d0;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <h1>Simple Maze Puzzle</h1>
+    <div class="info">
+      <span>Move with arrow keys or WASD.</span>
+      <span>Moves: <strong id="moves">0</strong></span>
+      <button id="resetBtn" type="button">Restart</button>
+    </div>
+    <section id="maze" class="maze" aria-label="Maze board"></section>
+    <p id="status"></p>
+    <p class="legend">
+      Blue = start, Orange = player, Green = goal, Gray = wall
+    </p>
+  </main>
+
+  <script>
+    const MAZE = [
+      [1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,0,0,1],
+      [1,0,1,0,1,0,1,1,0,1],
+      [1,0,1,0,0,0,1,0,0,1],
+      [1,0,1,1,1,0,1,0,1,1],
+      [1,0,0,0,1,0,0,0,0,1],
+      [1,1,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,0,0,3,1],
+      [1,1,1,1,1,1,1,1,1,1]
+    ];
+
+    const START = { x: 1, y: 1 };
+    const GOAL = { x: 8, y: 8 };
+
+    const mazeEl = document.getElementById("maze");
+    const movesEl = document.getElementById("moves");
+    const statusEl = document.getElementById("status");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const state = {
+      x: START.x,
+      y: START.y,
+      moves: 0,
+      cleared: false
+    };
+
+    function resetGame() {
+      state.x = START.x;
+      state.y = START.y;
+      state.moves = 0;
+      state.cleared = false;
+      statusEl.textContent = "";
+      render();
+    }
+
+    function isWalkable(x, y) {
+      if (y < 0 || y >= MAZE.length) return false;
+      if (x < 0 || x >= MAZE[0].length) return false;
+      return MAZE[y][x] !== 1;
+    }
+
+    function handleMove(dx, dy) {
+      if (state.cleared) return;
+
+      const nx = state.x + dx;
+      const ny = state.y + dy;
+      if (!isWalkable(nx, ny)) return;
+
+      state.x = nx;
+      state.y = ny;
+      state.moves += 1;
+      render();
+
+      if (state.x === GOAL.x && state.y === GOAL.y) {
+        state.cleared = true;
+        statusEl.textContent = "You reached the goal. Great!";
+      }
+    }
+
+    function render() {
+      mazeEl.innerHTML = "";
+      movesEl.textContent = String(state.moves);
+
+      for (let y = 0; y < MAZE.length; y += 1) {
+        for (let x = 0; x < MAZE[y].length; x += 1) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+
+          if (MAZE[y][x] === 1) {
+            cell.classList.add("wall");
+          } else {
+            cell.classList.add("path");
+          }
+
+          if (x === START.x && y === START.y) {
+            cell.classList.add("start");
+          }
+          if (x === GOAL.x && y === GOAL.y) {
+            cell.classList.add("goal");
+          }
+          if (x === state.x && y === state.y) {
+            cell.classList.add("player");
+          }
+
+          mazeEl.appendChild(cell);
+        }
+      }
+    }
+
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key)) {
+        event.preventDefault();
+      }
+
+      if (key === "arrowup" || key === "w") handleMove(0, -1);
+      if (key === "arrowdown" || key === "s") handleMove(0, 1);
+      if (key === "arrowleft" || key === "a") handleMove(-1, 0);
+      if (key === "arrowright" || key === "d") handleMove(1, 0);
+    });
+
+    resetBtn.addEventListener("click", resetGame);
+    resetGame();
+  </script>
+</body>
+</html>
